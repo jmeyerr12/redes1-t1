@@ -5,7 +5,7 @@
 #include "kermit.h"
 
 int main() {
-    const char *interface = "enx001122334455"; // substitua pela sua interface real
+    const char *interface = "enp0s31f6"; // substitua pela sua interface real
     int sock = cria_raw_socket((char*)interface);
 
     char msg[] = "Oi, servidor!";

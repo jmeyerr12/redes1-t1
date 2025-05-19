@@ -25,7 +25,7 @@
 
     @return Descritor de arquivo (FD) do socket
 */
-int rawsocket_connection(char *device);
+int cria_raw_socket(char *device);
 
 /*!
     @brief  Função wrapper da função send().

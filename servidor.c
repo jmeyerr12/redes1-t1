@@ -5,8 +5,13 @@
 #include <time.h>
 
 
-int main() {
-    const char *interface = "enx00e04c534458"; // atualize com sua interface de rede
+int main(int argc, char *argv[]) {
+    if (argc < 2) {
+        fprintf(stderr, "Uso: %s <interface>\n", argv[0]);
+        exit(1);
+    }
+
+    const char *interface = argv[1];
     int soquete = cria_raw_socket((char *)interface);
 
     tesouro_t tesouros[NUM_TESOUROS];

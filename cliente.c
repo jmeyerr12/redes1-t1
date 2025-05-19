@@ -5,7 +5,7 @@
 #include <unistd.h>
 
 void desenhar_mapa(posicao_t jogador, int visitado[GRID_SIZE][GRID_SIZE]) {
-    system("clear"); // ou "cls" no Windows
+    system("clear"); 
     printf("=== MAPA 8x8 ===\n");
     for (int y = GRID_SIZE - 1; y >= 0; y--) {
         for (int x = 0; x < GRID_SIZE; x++) {
@@ -20,8 +20,13 @@ void desenhar_mapa(posicao_t jogador, int visitado[GRID_SIZE][GRID_SIZE]) {
     }
 }
 
-int main() {
-    const char *interface = "enx00e04c534458"; // atualize para sua interface correta
+int main(int argc, char *argv[]) {
+    if (argc < 2) {
+        fprintf(stderr, "Uso: %s <interface>\n", argv[0]);
+        exit(1);
+    }
+
+    const char *interface = argv[1];
     int soquete = cria_raw_socket((char *)interface);
 
     posicao_t jogador = {0, 0};

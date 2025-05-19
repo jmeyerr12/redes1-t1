@@ -1,0 +1,77 @@
+#ifndef __KERMIT_H__
+#define __KERMIT_H__
+
+#include "raw_socket.h"
+#include <stddef.h>
+
+#define BUF_SIZE (1024 + 1)  // Buffer auxiliar
+#define DATA_SIZE (127)      // Tamanho máximo do campo de dados
+
+#define TIMEOUT_MS (2000)
+#define TIMEOUT_PROB (980)  // Probabilidade de timeout (para simulações)
+#define TIMEOUT_LIMIT (5)
+
+typedef unsigned char byte_t;
+
+// --- Códigos do protocolo ---
+
+// Marcador e endereços
+#define INIT_MARKER (0x7E)
+#define CLI_ADDR (0x1)
+#define SER_ADDR (0x2)
+
+// Tipos de mensagem
+#define ACK_TYPE         (0x0)
+#define NACK_TYPE        (0x1)
+#define OKACK_TYPE       (0x2)
+#define LIVRE_TYPE       (0x3)
+#define TAM_TYPE         (0x4)
+#define DATA_TYPE        (0x5)
+#define TEXT_ACK_NAME    (0x6)
+#define VIDEO_ACK_NAME   (0x7)
+#define IMG_ACK_NAME     (0x8)
+#define END_FILE_TYPE    (0x9)
+#define MOVER_DIR        (0xA)
+#define MOVER_CIMA       (0xB)
+#define MOVER_BAIXO      (0xC)
+#define MOVER_ESQ        (0xD)
+#define LIVRE2_TYPE      (0xE)
+#define ERROR_TYPE       (0xF)
+
+// Códigos de erro
+#define ERR_NO_PERMISSION   (0x0)
+#define ERR_NO_SPACE        (0x1)
+
+// Estrutura do pacote Kermit baseado na nova definição
+typedef struct kermit_pckt_t
+{
+    byte_t init_marker;          // 8 bits: marcador de início (sempre 0x7E)
+    byte_t size : 7;             // 7 bits: tamanho do campo de dados
+    byte_t seq  : 5;             // 5 bits: número de sequência
+    byte_t type : 4;             // 4 bits: tipo da mensagem
+    byte_t checksum;             // 8 bits: paridade/checksum do pacote
+    byte_t data[DATA_SIZE];      // 0 a 127 bytes: dados (conteúdo)
+} kermit_pckt_t;
+
+/*!
+ * @brief Gera um pacote Kermit
+ */
+void gen_kermit_pckt(kermit_pckt_t *kpckt, int seq, int type,
+                     void *data, size_t num_data);
+
+/*!
+ * @brief Imprime o conteúdo de um pacote
+ */
+void print_kermit_pckt(kermit_pckt_t *kpckt);
+
+/*!
+ * @brief Verifica se o pacote é válido (paridade e formato)
+ */
+int valid_kermit_pckt(kermit_pckt_t *kpckt);
+
+/*!
+ * @brief Detecta erros no pacote com base em paridade
+ */
+int error_detection(kermit_pckt_t *kpckt);
+
+#endif

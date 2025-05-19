@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <stdio.h>
  
-int cria_raw_socket(char* nome_interface_rede) {
+int rawsocket_connection(char* nome_interface_rede) {
     // Cria arquivo para o socket sem qualquer protocolo
     int soquete = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
     if (soquete == -1) {
@@ -36,4 +36,14 @@ int cria_raw_socket(char* nome_interface_rede) {
     }
  
     return soquete;
+}
+
+int sendto_rawsocket(int socket_fd, void *buf, size_t buf_size)
+{
+  return send(socket_fd, buf, buf_size, 0);
+}
+
+int recvfrom_rawsocket(int socket_fd, void *buf, size_t buf_size)
+{
+  return recv(socket_fd, buf, buf_size, 0);
 }

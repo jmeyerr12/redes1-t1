@@ -4,7 +4,6 @@
 #include <string.h>
 #include <time.h>
 
-
 int main(int argc, char *argv[]) {
     if (argc < 2) {
         fprintf(stderr, "Uso: %s <interface>\n", argv[0]);
@@ -23,13 +22,22 @@ int main(int argc, char *argv[]) {
 
     while (1) {
         kermit_pckt_t pacote_recebido;
-        ssize_t len = recv(soquete, &pacote_recebido, sizeof(pacote_recebido), 0);
+        ssize_t len = recvfrom_rawsocket(soquete, &pacote_recebido, sizeof(pacote_recebido));
         if (len <= 0 || !valid_kermit_pckt(&pacote_recebido)) continue;
 
         if (error_detection(&pacote_recebido)) {
             printf("[SERVIDOR] Erro no pacote recebido. Ignorando...\n");
+
+            kermit_pckt_t nack;
+            gen_kermit_pckt(&nack, pacote_recebido.seq, NACK_TYPE, NULL, 0);
+            sendto_rawsocket(soquete, &nack, sizeof(nack));
             continue;
         }
+
+        // ACK do movimento recebido
+        kermit_pckt_t ack;
+        gen_kermit_pckt(&ack, pacote_recebido.seq, ACK_TYPE, NULL, 0);
+        sendto_rawsocket(soquete, &ack, sizeof(ack));
 
         int mov = pacote_recebido.type;
         mostrar_log(jogador, "Movimento recebido");
@@ -58,9 +66,6 @@ int main(int argc, char *argv[]) {
             // TODO: Ler e enviar conteúdo do arquivo (em pacotes)
         } else {
             mostrar_log(jogador, "Nada encontrado.");
-            kermit_pckt_t ack;
-            gen_kermit_pckt(&ack, 0, ACK_TYPE, NULL, 0);
-            send(soquete, &ack, sizeof(ack), 0);
         }
 
         usleep(100000); // evita uso alto de CPU
@@ -86,7 +91,7 @@ void inicializar_tesouros(tesouro_t tesouros[NUM_TESOUROS]) {
         tesouros[i].y = y;
         tesouros[i].encontrado = 0;
 
-        snprintf(tesouros[i].arquivo, MAX_NOME_ARQ, "%d", i + 1); // por ora, só .txt
+        snprintf(tesouros[i].arquivo, MAX_NOME_ARQ, "%d", i + 1); // por ora, só nome do arquivo
     }
 
     printf("[SERVIDOR] Tesouros sorteados:\n");

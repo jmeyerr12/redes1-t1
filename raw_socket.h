@@ -1,22 +1,18 @@
 #ifndef __RAW_SOCKET_H__
 #define __RAW_SOCKET_H__
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/ioctl.h>
+
+#include <arpa/inet.h>
 #include <net/ethernet.h>
 #include <linux/if_packet.h>
-#include <linux/if.h>
+#include <net/if.h>
 #include <stdlib.h>
-#include <string.h>
 #include <stdio.h>
-#include <time.h>
-#include <errno.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <netinet/in.h>
+
+#include "kermit.h"
 
 // Códigos de erro
 #define ERROR_CODE -1
+#define TIMEOUT_MS 2000
 
 /*!
     @brief  Cria um raw socket
@@ -49,6 +45,9 @@ int sendto_rawsocket(int socket_fd, void *buf, size_t buf_size);
 
     @return Quantidade de bytes lidos
 */
-int recvfrom_rawsocket(int socket_fd, void *buf, size_t buf_size);
+int recvfrom_rawsocket(int soquete, int timeoutMillis, char* buffer, int tamanho_buffer);
+
+long long timestamp();
+int protocolo_e_valido(char* buffer, int tamanho_buffer);
 
 #endif

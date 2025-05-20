@@ -31,6 +31,7 @@ int main(int argc, char *argv[]) {
 
     posicao_t jogador = {0, 0};
     int visitado[GRID_SIZE][GRID_SIZE] = {{0}};
+    int seq = 0;
 
     printf("[CLIENTE] Use W/A/S/D para mover. Q para sair.\n");
 
@@ -50,16 +51,16 @@ int main(int argc, char *argv[]) {
             default: continue;
         }
 
-        // Envia movimento
+        // Envia o movimento
         kermit_pckt_t pacote;
-        gen_kermit_pckt(&pacote, 0, tipo_mov, NULL, 0);
-        send(soquete, &pacote, sizeof(pacote), 0);
+        gen_kermit_pckt(&pacote, seq, tipo_mov, NULL, 0);
+        sendto_rawsocket(soquete, &pacote, sizeof(pacote));
 
         // Espera resposta do servidor
         kermit_pckt_t resposta;
-        ssize_t len = recv(soquete, &resposta, sizeof(resposta), 0);
+        ssize_t len = recvfrom_rawsocket(soquete, &resposta, sizeof(resposta));
         if (len > 0 && valid_kermit_pckt(&resposta) && !error_detection(&resposta)) {
-            if (resposta.type == ACK_TYPE) {
+            if (resposta.type == ACK_TYPE && resposta.seq == seq) {
                 switch (tipo_mov) {
                     case MOVER_CIMA:    if (jogador.y < GRID_SIZE - 1) jogador.y++; break;
                     case MOVER_BAIXO:   if (jogador.y > 0) jogador.y--; break;
@@ -67,10 +68,15 @@ int main(int argc, char *argv[]) {
                     case MOVER_DIR:     if (jogador.x < GRID_SIZE - 1) jogador.x++; break;
                 }
                 visitado[jogador.x][jogador.y] = 1;
+                seq = (seq + 1) % 32;
+            } else if (resposta.type == NACK_TYPE && resposta.seq == seq) {
+                printf("[CLIENTE] NACK recebido (seq %d). Movimento não realizado.\n", seq);
             }
+        } else {
+            printf("[CLIENTE] Timeout ou pacote inválido. Nenhuma resposta do servidor.\n");
         }
 
-        usleep(100000); // evitar uso excessivo da CPU
+        usleep(100000);
     }
 
     close(soquete);

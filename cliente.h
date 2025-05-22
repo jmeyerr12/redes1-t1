@@ -39,7 +39,7 @@ void enviar_movimento(char comando);
 void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho);
 
 /*!
- * @brief Desenha o mapa 8x8 no terminal com a posição atual do jogador.
+ * @brief Desenha o mapa 8x8 no terminal com a posição atual do jogador e com as posições dos tesouros encontrados.
  *
  * @param jogador Estrutura contendo as coordenadas (x, y) do jogador.
  */

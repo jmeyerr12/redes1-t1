@@ -3,12 +3,15 @@
 int socket_fd;
 int seq = 0;
 Posicao posicao_jogador = {0, 0};
+int mapa[GRID_SIZE][GRID_SIZE] = {0}; // 0 = vazio, 1 = tesouro encontrado
 
 void desenhar_mapa(Posicao jogador) {
     printf("\n==== MAPA ====\n");
     for (int y = GRID_SIZE - 1; y >= 0; y--) {
         for (int x = 0; x < GRID_SIZE; x++) {
             if (jogador.x == x && jogador.y == y) {
+                printf(" P ");
+            } else if (mapa[y][x] == 1) {
                 printf(" X ");
             } else {
                 printf(" . ");
@@ -70,6 +73,7 @@ void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho) {
             return;
         }
     }
+    mapa[posicao_jogador.y][posicao_jogador.x] = 1; // Marca a posição atual como tendo um tesouro encontrado
 }
 
 void verificar_resposta() {

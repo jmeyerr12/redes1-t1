@@ -33,6 +33,7 @@ void enviar_movimento(char comando) {
 
     gen_kermit_pckt(&pkt, seq++, tipo, NULL, 0);
     sendto_rawsocket(socket_fd, &pkt, sizeof(pkt));
+    printf("ué mas isso nao é coisa de muié");
 }
 
 void receber_arquivo() {

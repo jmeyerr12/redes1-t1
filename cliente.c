@@ -51,6 +51,7 @@ void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho) {
     }
 
     printf("Recebendo arquivo: %s (%d bytes)\n", nome_arquivo, tamanho);
+    mapa[posicao_jogador.x][posicao_jogador.y] = 1; // Marca a posição atual como tendo um tesouro encontrado
 
     while (1) {
         char buffer[BUF_SIZE];
@@ -73,7 +74,6 @@ void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho) {
             return;
         }
     }
-    mapa[posicao_jogador.y][posicao_jogador.x] = 1; // Marca a posição atual como tendo um tesouro encontrado
 }
 
 void verificar_resposta() {

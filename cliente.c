@@ -4,6 +4,21 @@ int socket_fd;
 int seq = 0;
 Posicao posicao_jogador = {0, 0};
 
+void desenhar_mapa(Posicao jogador) {
+    printf("\n==== MAPA ====\n");
+    for (int y = GRID_SIZE - 1; y >= 0; y--) {
+        for (int x = 0; x < GRID_SIZE; x++) {
+            if (jogador.x == x && jogador.y == y) {
+                printf(" X ");
+            } else {
+                printf(" . ");
+            }
+        }
+        printf("\n");
+    }
+    printf("================\n\n");
+}
+
 void enviar_movimento(char comando) {
     kermit_pckt_t pkt;
     byte_t tipo;
@@ -90,6 +105,7 @@ int main(int argc, char *argv[]) {
 
     while (1) {
         printf("Posição atual: (%d, %d) > ", posicao_jogador.x, posicao_jogador.y);
+        desenhar_mapa(posicao_jogador);
         char comando = getchar();
         while (getchar() != '\n'); // limpar buffer
 

@@ -35,4 +35,11 @@ void enviar_movimento(char comando);
  */
 void receber_arquivo();
 
+/*!
+ * @brief Desenha o mapa 8x8 no terminal com a posição atual do jogador.
+ *
+ * @param jogador Estrutura contendo as coordenadas (x, y) do jogador.
+ */
+void desenhar_mapa(Posicao jogador)
+
 #endif

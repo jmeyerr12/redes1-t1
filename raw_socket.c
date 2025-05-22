@@ -43,20 +43,17 @@ long long timestamp() {
     return tp.tv_sec * 1000LL + tp.tv_usec / 1000;
 }
 
-int protocolo_e_valido(char* buffer, int tamanho_buffer) {
-    if (tamanho_buffer <= 0) return 0;
-    kermit_pckt_t* pkt = (kermit_pckt_t*) buffer;
-    return pkt->init_marker == INIT_MARKER;
-}
-
 int recvfrom_rawsocket(int soquete, int timeoutMillis, char* buffer, int tamanho_buffer) {
     long long comeco = timestamp();
-    struct timeval timeout = { .tv_sec = timeoutMillis/1000, .tv_usec = (timeoutMilis%1000) * 1000 };
+    struct timeval timeout = { .tv_sec = timeoutMillis / 1000, .tv_usec = (timeoutMillis % 1000) * 1000 };
     setsockopt(soquete, SOL_SOCKET, SO_RCVTIMEO, (char*) &timeout, sizeof(timeout));
     int bytes_lidos;
     do {
         bytes_lidos = recv(soquete, buffer, tamanho_buffer, 0);
-        if (protocolo_e_valido(buffer, bytes_lidos)) { return bytes_lidos; }
+        if (bytes_lidos == -1) continue; // timeout ou erro
+        if (valid_kermit_pckt((kermit_pckt_t *)buffer)) {
+            return bytes_lidos;
+        }
     } while (timestamp() - comeco <= timeoutMillis);
     return -1;
 }

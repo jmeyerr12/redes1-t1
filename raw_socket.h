@@ -7,12 +7,13 @@
 #include <net/if.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
+#include <sys/time.h>
 
 #include "kermit.h"
 
 // Códigos de erro
 #define ERROR_CODE -1
-#define TIMEOUT_MS 2000
 
 /*!
     @brief  Cria um raw socket
@@ -47,7 +48,11 @@ int sendto_rawsocket(int socket_fd, void *buf, size_t buf_size);
 */
 int recvfrom_rawsocket(int soquete, int timeoutMillis, char* buffer, int tamanho_buffer);
 
+/*!
+ * @brief Retorna o timestamp atual em milissegundos
+ *
+ * @return Tempo atual desde a Epoch em milissegundos
+ */
 long long timestamp();
-int protocolo_e_valido(char* buffer, int tamanho_buffer);
 
 #endif

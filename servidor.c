@@ -1,116 +1,154 @@
 #include "servidor.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
+
+Tesouro tesouros[MAX_TESOUROS];
+int pos_x = 0, pos_y = 0;
+int socket_fd;
+char buffer[BUF_SIZE];
+
+void carregar_tesouros() {
+    srand(time(NULL));
+
+    for (int i = 0; i < MAX_TESOUROS; i++) {
+        tesouros[i].x = rand() % GRID_SIZE;
+        tesouros[i].y = rand() % GRID_SIZE;
+        tesouros[i].encontrado = 0;
+
+        // Monta o prefixo esperado (ex: "1", "2", ..., "8")
+        char prefixo[3];
+        snprintf(prefixo, sizeof(prefixo), "%d", i + 1);
+
+        DIR *dir = opendir(OBJETOS_DIR);
+        if (!dir) {
+            perror("Erro ao abrir diretório de objetos");
+            exit(EXIT_FAILURE);
+        }
+
+        struct dirent *entry;
+        while ((entry = readdir(dir)) != NULL) {
+            // Verifica se é um arquivo regular e se começa com o prefixo correto
+            if (entry->d_type == DT_REG &&
+                strncmp(entry->d_name, prefixo, strlen(prefixo)) == 0) {
+                // Monta o caminho completo de forma segura
+                snprintf(tesouros[i].nome_arquivo, sizeof(tesouros[i].nome_arquivo),
+                         "%s/%.55s", OBJETOS_DIR, entry->d_name);
+                break;
+            }
+        }
+
+        closedir(dir);
+    }
+}
+
+void print_tesouros() {
+    printf("Tesouros sorteados:\n");
+    for (int i = 0; i < MAX_TESOUROS; i++) {
+        printf(" - [%d] (%d,%d) -> %s\n", i, tesouros[i].x, tesouros[i].y, tesouros[i].nome_arquivo);
+    }
+}
+
+void enviar_arquivo(const char *caminho, int seq) {
+    FILE *fp = fopen(caminho, "rb");
+    if (!fp) {
+        perror("Erro ao abrir tesouro");
+        return;
+    }
+
+    struct stat st;
+    stat(caminho, &st);
+    size_t tamanho = st.st_size;
+
+    // Enviar tipo e nome
+    char *ext = strrchr(caminho, '.');
+    int tipo = TEXT_ACK_NAME;
+    if (ext) {
+        if (strcmp(ext, ".mp4") == 0) tipo = VIDEO_ACK_NAME;
+        else if (strcmp(ext, ".jpg") == 0) tipo = IMG_ACK_NAME;
+    }
+
+    char nome[64];
+    strncpy(nome, strrchr(caminho, '/') + 1, sizeof(nome) - 1);
+    nome[sizeof(nome) - 1] = '\0';  // Garantir terminação nula
+    kermit_pckt_t nome_pkt;
+    gen_kermit_pckt(&nome_pkt, seq++, tipo, nome, strlen(nome));
+    sendto_rawsocket(socket_fd, &nome_pkt, sizeof(nome_pkt));
+
+    // Enviar tamanho
+    kermit_pckt_t tam_pkt;
+    gen_kermit_pckt(&tam_pkt, seq++, TAM_TYPE, &tamanho, sizeof(tamanho));
+    sendto_rawsocket(socket_fd, &tam_pkt, sizeof(tam_pkt));
+
+    // Enviar dados
+    byte_t dados[DATA_SIZE];
+    size_t lidos;
+    while ((lidos = fread(dados, 1, DATA_SIZE, fp)) > 0) {
+        kermit_pckt_t data_pkt;
+        gen_kermit_pckt(&data_pkt, seq++, DATA_TYPE, dados, lidos);
+        sendto_rawsocket(socket_fd, &data_pkt, sizeof(data_pkt));
+        // Espera por ACK
+        // (implementação do stop-and-wait pode ser refinada aqui)
+    }
+
+    // Enviar finalizador
+    kermit_pckt_t fim_pkt;
+    gen_kermit_pckt(&fim_pkt, seq++, END_FILE_TYPE, NULL, 0);
+    sendto_rawsocket(socket_fd, &fim_pkt, sizeof(fim_pkt));
+
+    fclose(fp);
+}
+
+int verificar_tesouro() {
+    for (int i = 0; i < MAX_TESOUROS; i++) {
+        if (!tesouros[i].encontrado &&
+            tesouros[i].x == pos_x && tesouros[i].y == pos_y) {
+            tesouros[i].encontrado = 1;
+            return i;
+        }
+    }
+    return -1;
+}
+
+void processar_movimento(byte_t tipo) {
+    switch (tipo) {
+        case MOVER_DIR: if (pos_x < GRID_SIZE - 1) pos_x++; break;
+        case MOVER_ESQ: if (pos_x > 0) pos_x--; break;
+        case MOVER_CIMA: if (pos_y < GRID_SIZE - 1) pos_y++; break;
+        case MOVER_BAIXO: if (pos_y > 0) pos_y--; break;
+        default: break;
+    }
+
+    printf("Jogador moveu para: (%d, %d)\n", pos_x, pos_y);
+
+    int id = verificar_tesouro();
+    if (id != -1) {
+        printf("Tesouro encontrado: %s\n", tesouros[id].nome_arquivo);
+        enviar_arquivo(tesouros[id].nome_arquivo, 0);
+    }
+}
 
 int main(int argc, char *argv[]) {
     if (argc < 2) {
         fprintf(stderr, "Uso: %s <interface>\n", argv[0]);
-        exit(1);
+        return EXIT_FAILURE;
     }
 
-    const char *interface = argv[1];
-    int soquete = cria_raw_socket((char *)interface);
-
-    tesouro_t tesouros[NUM_TESOUROS];
-    posicao_t jogador = {0, 0}; // começa no canto inferior esquerdo
-
-    inicializar_tesouros(tesouros);
-
-    printf("[SERVIDOR] Aguardando comandos do cliente...\n");
+    socket_fd = cria_raw_socket(argv[1]);
+    carregar_tesouros();
+    print_tesouros();
 
     while (1) {
-        kermit_pckt_t pacote_recebido;
-        ssize_t len = recvfrom_rawsocket(soquete, &pacote_recebido, sizeof(pacote_recebido));
-        if (len <= 0 || !valid_kermit_pckt(&pacote_recebido)) continue;
+        int bytes = recvfrom_rawsocket(socket_fd, TIMEOUT_MS, buffer, BUF_SIZE);
+        if (bytes <= 0) continue;
 
-        if (error_detection(&pacote_recebido)) {
-            printf("[SERVIDOR] Erro no pacote recebido. Ignorando...\n");
-
-            kermit_pckt_t nack;
-            gen_kermit_pckt(&nack, pacote_recebido.seq, NACK_TYPE, NULL, 0);
-            sendto_rawsocket(soquete, &nack, sizeof(nack));
+        kermit_pckt_t *pkt = (kermit_pckt_t *)buffer;
+        if (!valid_kermit_pckt(pkt)) {
+            printf("Pacote inválido recebido\n");
             continue;
         }
 
-        // ACK do movimento recebido
-        kermit_pckt_t ack;
-        gen_kermit_pckt(&ack, pacote_recebido.seq, ACK_TYPE, NULL, 0);
-        sendto_rawsocket(soquete, &ack, sizeof(ack));
-
-        int mov = pacote_recebido.type;
-        mostrar_log(jogador, "Movimento recebido");
-
-        // Atualiza posição
-        switch (mov) {
-            case MOVER_CIMA:
-                if (jogador.y < GRID_SIZE - 1) jogador.y++;
-                break;
-            case MOVER_BAIXO:
-                if (jogador.y > 0) jogador.y--;
-                break;
-            case MOVER_DIR:
-                if (jogador.x < GRID_SIZE - 1) jogador.x++;
-                break;
-            case MOVER_ESQ:
-                if (jogador.x > 0) jogador.x--;
-                break;
-            default:
-                continue;
+        if (pkt->type >= MOVER_DIR && pkt->type <= MOVER_ESQ) {
+            processar_movimento(pkt->type);
         }
-
-        char arquivo[MAX_NOME_ARQ];
-        if (verificar_tesouro(tesouros, jogador, arquivo)) {
-            mostrar_log(jogador, "Tesouro encontrado!");
-            // TODO: Ler e enviar conteúdo do arquivo (em pacotes)
-        } else {
-            mostrar_log(jogador, "Nada encontrado.");
-        }
-
-        usleep(100000); // evita uso alto de CPU
     }
 
-    close(soquete);
     return 0;
-}
-
-void inicializar_tesouros(tesouro_t tesouros[NUM_TESOUROS]) {
-    srand(time(NULL));
-    int ocupados[GRID_SIZE][GRID_SIZE] = {0};
-
-    for (int i = 0; i < NUM_TESOUROS; i++) {
-        int x, y;
-        do {
-            x = rand() % GRID_SIZE;
-            y = rand() % GRID_SIZE;
-        } while (ocupados[x][y]);
-        ocupados[x][y] = 1;
-
-        tesouros[i].x = x;
-        tesouros[i].y = y;
-        tesouros[i].encontrado = 0;
-
-        snprintf(tesouros[i].arquivo, MAX_NOME_ARQ, "%d", i + 1); // por ora, só nome do arquivo
-    }
-
-    printf("[SERVIDOR] Tesouros sorteados:\n");
-    for (int i = 0; i < NUM_TESOUROS; i++) {
-        printf("  %d: (%d, %d) => %s\n", i + 1, tesouros[i].x, tesouros[i].y, tesouros[i].arquivo);
-    }
-}
-
-int verificar_tesouro(tesouro_t tesouros[NUM_TESOUROS], posicao_t pos, char *arquivo_encontrado) {
-    for (int i = 0; i < NUM_TESOUROS; i++) {
-        if (tesouros[i].x == pos.x && tesouros[i].y == pos.y && !tesouros[i].encontrado) {
-            strcpy(arquivo_encontrado, tesouros[i].arquivo);
-            tesouros[i].encontrado = 1;
-            return 1;
-        }
-    }
-    return 0;
-}
-
-void mostrar_log(posicao_t pos, const char *evento) {
-    printf("[LOG] Jogador em (%d, %d): %s\n", pos.x, pos.y, evento);
 }

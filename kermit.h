@@ -2,7 +2,6 @@
 #define __KERMIT_H__
 
 #include "raw_socket.h"
-#include <stddef.h>
 
 #define BUF_SIZE (1024 + 1)  // Buffer auxiliar
 #define DATA_SIZE (127)      // Tamanho máximo do campo de dados
@@ -55,23 +54,69 @@ typedef struct kermit_pckt_t
 
 /*!
  * @brief Gera um pacote Kermit
+ *
+ * @param kpckt Ponteiro para o pacote a ser preenchido
+ * @param seq Número de sequência do pacote
+ * @param type Tipo da mensagem
+ * @param data Ponteiro para os dados a serem inseridos
+ * @param num_data Número de bytes de dados
  */
 void gen_kermit_pckt(kermit_pckt_t *kpckt, int seq, int type,
                      void *data, size_t num_data);
 
 /*!
  * @brief Imprime o conteúdo de um pacote
+ *
+ * @param kpckt Ponteiro para o pacote a ser impresso
  */
 void print_kermit_pckt(kermit_pckt_t *kpckt);
 
 /*!
  * @brief Verifica se o pacote é válido (paridade e formato)
+ *
+ * @param kpckt Ponteiro para o pacote a ser validado
+ * @return 1 se válido, 0 se inválido
  */
 int valid_kermit_pckt(kermit_pckt_t *kpckt);
 
 /*!
  * @brief Detecta erros no pacote com base em paridade
+ *
+ * @param kpckt Ponteiro para o pacote a ser verificado
+ * @return 1 se há erro, 0 se não há erro
  */
 int error_detection(kermit_pckt_t *kpckt);
+
+/*!
+ * @brief Verifica se o pacote é um ACK
+ *
+ * @param pkt Ponteiro para o pacote
+ * @return 1 se for ACK, 0 caso contrário
+ */
+int is_ack(kermit_pckt_t *pkt);
+
+/*!
+ * @brief Verifica se o pacote é um NACK
+ *
+ * @param pkt Ponteiro para o pacote
+ * @return 1 se for NACK, 0 caso contrário
+ */
+int is_nack(kermit_pckt_t *pkt);
+
+/*!
+ * @brief Gera um pacote ACK
+ *
+ * @param ack Ponteiro para o pacote ACK a ser preenchido
+ * @param seq Número de sequência correspondente
+ */
+void gen_ack(kermit_pckt_t *ack, byte_t seq);
+
+/*!
+ * @brief Gera um pacote NACK
+ *
+ * @param nack Ponteiro para o pacote NACK a ser preenchido
+ * @param seq Número de sequência correspondente
+ */
+void gen_nack(kermit_pckt_t *nack, byte_t seq);
 
 #endif

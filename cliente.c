@@ -11,7 +11,7 @@ void desenhar_mapa(Posicao jogador) {
         for (int x = 0; x < GRID_SIZE; x++) {
             if (jogador.x == x && jogador.y == y) {
                 printf(" P ");
-            } else if (mapa[y][x] == 1) {
+            } else if (mapa[x][y] == 1) {
                 printf(" X ");
             } else {
                 printf(" . ");

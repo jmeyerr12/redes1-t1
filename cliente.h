@@ -42,4 +42,9 @@ void receber_arquivo();
  */
 void desenhar_mapa(Posicao jogador);
 
+/*!
+ * @brief @brief Verifica se o servidor iniciou o envio de um arquivo e, se sim, processa-o.
+ */
+void verificar_resposta();
+
 #endif

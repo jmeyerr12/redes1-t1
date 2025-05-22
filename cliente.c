@@ -94,6 +94,35 @@ void receber_arquivo() {
     }
 }
 
+/*!
+ * @brief Verifica se o servidor iniciou o envio de um arquivo e, se sim, processa-o.
+ */
+void verificar_resposta() {
+    char buffer[BUF_SIZE];
+    int bytes = recvfrom_rawsocket(socket_fd, 300, buffer, BUF_SIZE); // timeout curto (300ms)
+
+    if (bytes <= 0) return;
+
+    kermit_pckt_t *pkt = (kermit_pckt_t *)buffer;
+    if (!valid_kermit_pckt(pkt)) return;
+
+    if (pkt->type == TEXT_ACK_NAME ||
+        pkt->type == IMG_ACK_NAME ||
+        pkt->type == VIDEO_ACK_NAME) {
+
+        // Reenviar esse primeiro pacote para dentro da lógica de recebimento
+        // Simulando que ele foi recebido por receber_arquivo()
+        memcpy(buffer, pkt, sizeof(kermit_pckt_t));
+        // Reposicionar o ponteiro de leitura no buffer global
+        fseek(stdin, 0, SEEK_END); // limpa stdin se algo ficou preso
+        ungetc('\n', stdin);       // simula final de leitura
+
+        // Agora processa normalmente
+        // DICA: uma versão futura poderia adaptar receber_arquivo() para aceitar o 1º pacote
+        receber_arquivo();
+    }
+}
+
 int main(int argc, char *argv[]) {
     if (argc < 2) {
         fprintf(stderr, "Uso: %s <interface>\n", argv[0]);
@@ -119,7 +148,7 @@ int main(int argc, char *argv[]) {
             case 'd': if (posicao_jogador.x < GRID_SIZE - 1) posicao_jogador.x++; break;
         }
 
-        receber_arquivo();
+        verificar_resposta();
     }
 
     close(socket_fd);

@@ -104,8 +104,8 @@ int main(int argc, char *argv[]) {
     printf("Cliente iniciado. Use W/A/S/D para mover. Q para sair.\n");
 
     while (1) {
-        printf("Posição atual: (%d, %d) > ", posicao_jogador.x, posicao_jogador.y);
         desenhar_mapa(posicao_jogador);
+        printf("Posição atual: (%d, %d) > ", posicao_jogador.x, posicao_jogador.y);
         char comando = getchar();
         while (getchar() != '\n'); // limpar buffer
 
@@ -118,6 +118,7 @@ int main(int argc, char *argv[]) {
             case 'a': if (posicao_jogador.x > 0) posicao_jogador.x--; break;
             case 'd': if (posicao_jogador.x < GRID_SIZE - 1) posicao_jogador.x++; break;
         }
+        printf("cocozão");
 
         receber_arquivo();
     }

@@ -94,9 +94,6 @@ void receber_arquivo() {
     }
 }
 
-/*!
- * @brief Verifica se o servidor iniciou o envio de um arquivo e, se sim, processa-o.
- */
 void verificar_resposta() {
     char buffer[BUF_SIZE];
     int bytes = recvfrom_rawsocket(socket_fd, 300, buffer, BUF_SIZE); // timeout curto (300ms)

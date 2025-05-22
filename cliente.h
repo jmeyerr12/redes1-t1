@@ -40,6 +40,6 @@ void receber_arquivo();
  *
  * @param jogador Estrutura contendo as coordenadas (x, y) do jogador.
  */
-void desenhar_mapa(Posicao jogador)
+void desenhar_mapa(Posicao jogador);
 
 #endif

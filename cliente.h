@@ -31,9 +31,12 @@ void enviar_movimento(char comando);
 
 /*!
  * @brief Recebe e processa um arquivo enviado pelo servidor.
- *        O arquivo pode ser texto (exibido no console) ou binário (salvo no disco).
+ *
+ * @param tipo Tipo do arquivo (TEXT_ACK_NAME, IMG_ACK_NAME ou VIDEO_ACK_NAME)
+ * @param nome_arquivo Nome do arquivo recebido
+ * @param tamanho Tamanho total do arquivo em bytes
  */
-void receber_arquivo();
+void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho);
 
 /*!
  * @brief Desenha o mapa 8x8 no terminal com a posição atual do jogador.

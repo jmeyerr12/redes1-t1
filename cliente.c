@@ -35,88 +35,78 @@ void enviar_movimento(char comando) {
     sendto_rawsocket(socket_fd, &pkt, sizeof(pkt));
 }
 
-void receber_arquivo() {
-    kermit_pckt_t pkt;
-    char buffer[BUF_SIZE];
-    char nome_arquivo[64] = {0};
-    int tipo = -1;
-    int total_bytes = 0;
-    int tamanho_esperado = -1;
-
+void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho) {
     FILE *fp = NULL;
+    int total_bytes = 0;
+
+    if (tipo != TEXT_ACK_NAME) {
+        fp = fopen(nome_arquivo, "wb");
+        if (!fp) {
+            perror("Erro ao criar arquivo");
+            return;
+        }
+    }
+
+    printf("Recebendo arquivo: %s (%d bytes)\n", nome_arquivo, tamanho);
 
     while (1) {
+        char buffer[BUF_SIZE];
+        kermit_pckt_t *pkt = (kermit_pckt_t *)buffer;
+
         int bytes = recvfrom_rawsocket(socket_fd, TIMEOUT_MS, buffer, BUF_SIZE);
-        if (bytes <= 0) continue;
+        if (bytes <= 0 || !valid_kermit_pckt(pkt)) continue;
 
-        memcpy(&pkt, buffer, sizeof(pkt));
-        if (!valid_kermit_pckt(&pkt)) continue;
-
-        switch (pkt.type) {
-            case TEXT_ACK_NAME:
-            case IMG_ACK_NAME:
-            case VIDEO_ACK_NAME:
-                tipo = pkt.type;
-                memcpy(nome_arquivo, pkt.data, pkt.size);
-                nome_arquivo[pkt.size] = '\0';
-                printf("Recebendo arquivo: %s\n", nome_arquivo);
-                if (tipo != TEXT_ACK_NAME) {
-                    fp = fopen(nome_arquivo, "wb");
-                    if (!fp) {
-                        perror("Erro ao abrir arquivo");
-                        return;
-                    }
-                }
-                break;
-
-            case TAM_TYPE:
-                memcpy(&tamanho_esperado, pkt.data, sizeof(int));
-                printf("Tamanho: %d bytes\n", tamanho_esperado);
-                break;
-
-            case DATA_TYPE:
-                if (tipo == TEXT_ACK_NAME) {
-                    pkt.data[pkt.size] = '\0';
-                    printf("%s", pkt.data);
-                } else if (fp) {
-                    fwrite(pkt.data, 1, pkt.size, fp);
-                    total_bytes += pkt.size;
-                }
-                break;
-
-            case END_FILE_TYPE:
-                printf("\nFim do arquivo recebido.\n");
-                if (fp) fclose(fp);
-                return;
-
-            default: break;
+        if (pkt->type == DATA_TYPE) {
+            if (tipo == TEXT_ACK_NAME) {
+                pkt->data[pkt->size] = '\0';
+                printf("%s", pkt->data);
+            } else {
+                fwrite(pkt->data, 1, pkt->size, fp);
+            }
+            total_bytes += pkt->size;
+        } else if (pkt->type == END_FILE_TYPE) {
+            if (fp) fclose(fp);
+            printf("\nArquivo %s recebido (%d bytes).\n", nome_arquivo, total_bytes);
+            return;
         }
     }
 }
 
 void verificar_resposta() {
     char buffer[BUF_SIZE];
-    int bytes = recvfrom_rawsocket(socket_fd, 300, buffer, BUF_SIZE); // timeout curto (300ms)
-
-    if (bytes <= 0) return;
-
     kermit_pckt_t *pkt = (kermit_pckt_t *)buffer;
-    if (!valid_kermit_pckt(pkt)) return;
 
-    if (pkt->type == TEXT_ACK_NAME ||
-        pkt->type == IMG_ACK_NAME ||
-        pkt->type == VIDEO_ACK_NAME) {
+    static char nome_arquivo[64] = "";
+    static int tipo_arquivo = -1;
+    static int aguardando_arquivo = 0;
 
-        // Reenviar esse primeiro pacote para dentro da lógica de recebimento
-        // Simulando que ele foi recebido por receber_arquivo()
-        memcpy(buffer, pkt, sizeof(kermit_pckt_t));
-        // Reposicionar o ponteiro de leitura no buffer global
-        fseek(stdin, 0, SEEK_END); // limpa stdin se algo ficou preso
-        ungetc('\n', stdin);       // simula final de leitura
+    int bytes = recvfrom_rawsocket(socket_fd, 300, buffer, BUF_SIZE); // timeout curto
 
-        // Agora processa normalmente
-        // DICA: uma versão futura poderia adaptar receber_arquivo() para aceitar o 1º pacote
-        receber_arquivo();
+    if (bytes <= 0 || !valid_kermit_pckt(pkt)) return;
+
+    switch (pkt->type) {
+        case TEXT_ACK_NAME:
+        case IMG_ACK_NAME:
+        case VIDEO_ACK_NAME:
+            tipo_arquivo = pkt->type;
+            memcpy(nome_arquivo, pkt->data, pkt->size);
+            nome_arquivo[pkt->size] = '\0';
+            aguardando_arquivo = 1;
+            break;
+
+        case TAM_TYPE:
+            if (aguardando_arquivo && tipo_arquivo != -1 && nome_arquivo[0] != '\0') {
+                int tamanho;
+                memcpy(&tamanho, pkt->data, sizeof(int));
+                receber_arquivo(tipo_arquivo, nome_arquivo, tamanho);
+                tipo_arquivo = -1;
+                nome_arquivo[0] = '\0';
+                aguardando_arquivo = 0;
+            }
+            break;
+
+        default:
+            break;
     }
 }
 

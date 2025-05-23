@@ -134,12 +134,13 @@ void processar_movimento(byte_t tipo) {
 
     int id = verificar_tesouro();
     if (id != -1) {
+        printf("Jogador moveu para: (%d, %d)\n", pos_x, pos_y);
         printf("Tesouro encontrado: %s\n", tesouros[id].nome_arquivo);
         enviar_arquivo(tesouros[id].nome_arquivo, 0);
+    } else {
+        printf("Jogador moveu para: (%d, %d)\n", pos_x, pos_y);
+        responder_movimento(OKACK_TYPE); // movimento realizado com sucesso
     }
-    
-    printf("Jogador moveu para: (%d, %d)\n", pos_x, pos_y);
-    responder_movimento(OKACK_TYPE); // movimento realizado com sucesso
 }
 
 int main(int argc, char *argv[]) {

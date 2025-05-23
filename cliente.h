@@ -50,4 +50,6 @@ void desenhar_mapa(Posicao jogador);
  */
 void verificar_resposta();
 
+void responder_ack(byte_t tipo, byte_t seq);
+
 #endif

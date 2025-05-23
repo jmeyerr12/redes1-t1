@@ -107,16 +107,33 @@ int verificar_tesouro() {
     return -1;
 }
 
+void responder_movimento(byte_t tipo) {
+    kermit_pckt_t resposta;
+    gen_kermit_pckt(&resposta, ultimo_seq++, tipo, NULL, 0);
+    sendto_rawsocket(socket_fd, &resposta, sizeof(resposta));
+}
+
 void processar_movimento(byte_t tipo) {
+    int movimento_valido = 1;
+
     switch (tipo) {
-        case MOVER_DIR: if (pos_x < GRID_SIZE - 1) pos_x++; break;
-        case MOVER_ESQ: if (pos_x > 0) pos_x--; break;
-        case MOVER_CIMA: if (pos_y < GRID_SIZE - 1) pos_y++; break;
-        case MOVER_BAIXO: if (pos_y > 0) pos_y--; break;
-        default: break;
+        case MOVER_DIR:  if (pos_x < GRID_SIZE - 1) pos_x++; else movimento_valido = 0; break;
+        case MOVER_ESQ:  if (pos_x > 0) pos_x--; else movimento_valido = 0; break;
+        case MOVER_CIMA: if (pos_y < GRID_SIZE - 1) pos_y++; else movimento_valido = 0; break;
+        case MOVER_BAIXO:if (pos_y > 0) pos_y--; else movimento_valido = 0; break;
+        default:
+            responder_movimento(NACK_TYPE); // tipo de movimento inválido
+            return;
+    }
+
+    if (!movimento_valido) {
+        printf("Movimento inválido: fora do grid!\n");
+        responder_movimento(ACK_TYPE); // ACK simples, mas sem movimentar
+        return;
     }
 
     printf("Jogador moveu para: (%d, %d)\n", pos_x, pos_y);
+    responder_movimento(OKACK_TYPE); // movimento realizado com sucesso
 
     int id = verificar_tesouro();
     if (id != -1) {

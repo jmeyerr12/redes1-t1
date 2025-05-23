@@ -119,4 +119,11 @@ void gen_ack(kermit_pckt_t *ack, byte_t seq);
  */
 void gen_nack(kermit_pckt_t *nack, byte_t seq);
 
+/*!
+ * @brief Envia uma resposta do servidor ao cliente após tentativa de movimento.
+ *
+ * @param tipo Tipo de resposta: OKACK_TYPE (0x2), ACK_TYPE (0x0), NACK_TYPE (0x1)
+ */
+void responder_movimento(byte_t tipo);
+
 #endif

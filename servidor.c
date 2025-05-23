@@ -78,7 +78,6 @@ void enviar_arquivo(const char *caminho, int seq) {
     while (1) {
         sendto_rawsocket(socket_fd, &pkt, sizeof(pkt));
         int bytes = recvfrom_rawsocket(socket_fd, TIMEOUT_MS, ack_buf, BUF_SIZE);
-        printf("esperando okack do nome");
         if (bytes > 0 && valid_kermit_pckt(resp) && resp->seq == pkt.seq) {
             if (resp->type == OKACK_TYPE) break;
         }
@@ -90,7 +89,6 @@ void enviar_arquivo(const char *caminho, int seq) {
     while (1) {
         sendto_rawsocket(socket_fd, &pkt, sizeof(pkt));
         int bytes = recvfrom_rawsocket(socket_fd, TIMEOUT_MS, ack_buf, BUF_SIZE);
-        printf("esperando okack do tamanho");
         if (bytes > 0 && valid_kermit_pckt(resp) && resp->seq == pkt.seq) {
             if (resp->type == OKACK_TYPE) break;
         }
@@ -99,7 +97,7 @@ void enviar_arquivo(const char *caminho, int seq) {
 
     // 3. Dados
     size_t lidos;
-    while ((lidos = fread(dados, 1, DATA_SIZE, fp)) > 0) {
+    while ((lidos = fread(dados, 1, DATA_SIZE, fp)) > 0) { //não ta recebendo o ack dos dados
         gen_kermit_pckt(&pkt, seq, DATA_TYPE, dados, lidos);
         while (1) {
             sendto_rawsocket(socket_fd, &pkt, sizeof(pkt));

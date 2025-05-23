@@ -83,34 +83,53 @@ void verificar_resposta() {
     static char nome_arquivo[64] = "";
     static int tipo_arquivo = -1;
     static int aguardando_arquivo = 0;
+    static int tamanho_arquivo = -1;
 
-    int bytes = recvfrom_rawsocket(socket_fd, 300, buffer, BUF_SIZE); // timeout curto
+    long long inicio = timestamp();
+    while (timestamp() - inicio < 500) {
+        int bytes = recvfrom_rawsocket(socket_fd, 50, buffer, BUF_SIZE); // timeout curto
+        if (bytes <= 0 || !valid_kermit_pckt(pkt)) continue;
 
-    if (bytes <= 0 || !valid_kermit_pckt(pkt)) return;
+        switch (pkt->type) {
+            case OKACK_TYPE:
+                printf("Movimento realizado com sucesso (OKACK).\n");
+                break;
 
-    switch (pkt->type) {
-        case TEXT_ACK_NAME:
-        case IMG_ACK_NAME:
-        case VIDEO_ACK_NAME:
-            tipo_arquivo = pkt->type;
-            memcpy(nome_arquivo, pkt->data, pkt->size);
-            nome_arquivo[pkt->size] = '\0';
-            aguardando_arquivo = 1;
-            break;
+            case ACK_TYPE:
+                printf("Comando reconhecido, mas movimento inválido (ACK).\n");
+                break;
 
-        case TAM_TYPE:
-            if (aguardando_arquivo && tipo_arquivo != -1 && nome_arquivo[0] != '\0') {
-                int tamanho;
-                memcpy(&tamanho, pkt->data, sizeof(int));
-                receber_arquivo(tipo_arquivo, nome_arquivo, tamanho);
-                tipo_arquivo = -1;
-                nome_arquivo[0] = '\0';
-                aguardando_arquivo = 0;
-            }
-            break;
+            case NACK_TYPE:
+                printf("Servidor não recebeu o comando corretamente (NACK).\n");
+                break;
 
-        default:
-            break;
+            case TEXT_ACK_NAME:
+            case IMG_ACK_NAME:
+            case VIDEO_ACK_NAME:
+                tipo_arquivo = pkt->type;
+                memcpy(nome_arquivo, pkt->data, pkt->size);
+                nome_arquivo[pkt->size] = '\0';
+                aguardando_arquivo = 1;
+                responder_ack(OKACK_TYPE, pkt->seq); // confirmar recebimento do nome
+                break;
+
+            case TAM_TYPE:
+                if (aguardando_arquivo && tipo_arquivo != -1 && nome_arquivo[0] != '\0') {
+                    memcpy(&tamanho_arquivo, pkt->data, sizeof(int));
+                    responder_ack(OKACK_TYPE, pkt->seq); // confirmar recebimento do tamanho
+                    receber_arquivo(tipo_arquivo, nome_arquivo, tamanho_arquivo);
+                    tipo_arquivo = -1;
+                    aguardando_arquivo = 0;
+                    nome_arquivo[0] = '\0';
+                    tamanho_arquivo = -1;
+                    return;
+                }
+                break;
+
+            default:
+                // Ignora tipos que não fazem sentido neste contexto
+                break;
+        }
     }
 }
 

@@ -57,7 +57,6 @@ void enviar_arquivo(const char *caminho, int seq) {
     stat(caminho, &st);
     size_t tamanho = st.st_size;
 
-    // Enviar tipo e nome
     char *ext = strrchr(caminho, '.');
     int tipo = TEXT_ACK_NAME;
     if (ext) {
@@ -67,33 +66,55 @@ void enviar_arquivo(const char *caminho, int seq) {
 
     char nome[64];
     strncpy(nome, strrchr(caminho, '/') + 1, sizeof(nome) - 1);
-    nome[sizeof(nome) - 1] = '\0';  // Garantir terminação nula
-    kermit_pckt_t nome_pkt;
-    gen_kermit_pckt(&nome_pkt, seq++, tipo, nome, strlen(nome));
-    sendto_rawsocket(socket_fd, &nome_pkt, sizeof(nome_pkt));
+    nome[sizeof(nome) - 1] = '\0';
 
-    // Enviar tamanho
-    kermit_pckt_t tam_pkt;
-    gen_kermit_pckt(&tam_pkt, seq++, TAM_TYPE, &tamanho, sizeof(tamanho));
-    sendto_rawsocket(socket_fd, &tam_pkt, sizeof(tam_pkt));
-
-    // Enviar dados
     byte_t dados[DATA_SIZE];
+    kermit_pckt_t pkt;
+    char ack_buf[BUF_SIZE];
+    kermit_pckt_t *resp = (kermit_pckt_t *)ack_buf;
+
+    // 1. Nome
+    gen_kermit_pckt(&pkt, seq, tipo, nome, strlen(nome));
+    while (1) {
+        sendto_rawsocket(socket_fd, &pkt, sizeof(pkt));
+        int bytes = recvfrom_rawsocket(socket_fd, TIMEOUT_MS, ack_buf, BUF_SIZE);
+        if (bytes > 0 && valid_kermit_pckt(resp) && resp->seq == pkt.seq) {
+            if (resp->type == OKACK_TYPE) break;
+        }
+    }
+    seq++;
+
+    // 2. Tamanho
+    gen_kermit_pckt(&pkt, seq, TAM_TYPE, &tamanho, sizeof(tamanho));
+    while (1) {
+        sendto_rawsocket(socket_fd, &pkt, sizeof(pkt));
+        int bytes = recvfrom_rawsocket(socket_fd, TIMEOUT_MS, ack_buf, BUF_SIZE);
+        if (bytes > 0 && valid_kermit_pckt(resp) && resp->seq == pkt.seq) {
+            if (resp->type == OKACK_TYPE) break;
+        }
+    }
+    seq++;
+
+    // 3. Dados
     size_t lidos;
     while ((lidos = fread(dados, 1, DATA_SIZE, fp)) > 0) {
-        kermit_pckt_t data_pkt;
-        gen_kermit_pckt(&data_pkt, seq++, DATA_TYPE, dados, lidos);
-        sendto_rawsocket(socket_fd, &data_pkt, sizeof(data_pkt));
-        // Espera por ACK
-        // (implementação do stop-and-wait pode ser refinada aqui)
+        gen_kermit_pckt(&pkt, seq, DATA_TYPE, dados, lidos);
+        while (1) {
+            sendto_rawsocket(socket_fd, &pkt, sizeof(pkt));
+            int bytes = recvfrom_rawsocket(socket_fd, TIMEOUT_MS, ack_buf, BUF_SIZE);
+            if (bytes > 0 && valid_kermit_pckt(resp) && resp->seq == pkt.seq) {
+                if (resp->type == OKACK_TYPE) break;
+            }
+        }
+        seq++;
     }
 
-    // Enviar finalizador
-    kermit_pckt_t fim_pkt;
-    gen_kermit_pckt(&fim_pkt, seq++, END_FILE_TYPE, NULL, 0);
-    sendto_rawsocket(socket_fd, &fim_pkt, sizeof(fim_pkt));
+    // 4. Finalizador (sem ACK obrigatório)
+    gen_kermit_pckt(&pkt, seq++, END_FILE_TYPE, NULL, 0);
+    sendto_rawsocket(socket_fd, &pkt, sizeof(pkt));
 
     fclose(fp);
+    printf("Arquivo '%s' enviado com sucesso.\n", caminho);
 }
 
 int verificar_tesouro() {

@@ -116,13 +116,13 @@ void verificar_resposta() {
                 memcpy(nome_arquivo, pkt->data, pkt->size);
                 nome_arquivo[pkt->size] = '\0';
                 aguardando_arquivo = 1;
-                responder_ack(OKACK_TYPE, pkt->seq); // confirmar recebimento do nome
+                responder_ack(ACK_TYPE, pkt->seq); // confirmar recebimento do nome
                 break;
 
             case TAM_TYPE:
                 if (aguardando_arquivo && tipo_arquivo != -1 && nome_arquivo[0] != '\0') {
                     memcpy(&tamanho_arquivo, pkt->data, sizeof(int));
-                    responder_ack(OKACK_TYPE, pkt->seq); // confirmar recebimento do tamanho
+                    responder_ack(ACK_TYPE, pkt->seq); // confirmar recebimento do tamanho
                     receber_arquivo(tipo_arquivo, nome_arquivo, tamanho_arquivo);
                     tipo_arquivo = -1;
                     aguardando_arquivo = 0;

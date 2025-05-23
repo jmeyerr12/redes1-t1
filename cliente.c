@@ -128,12 +128,14 @@ void verificar_resposta() {
                 nome_arquivo[pkt->size] = '\0';
                 aguardando_arquivo = 1;
                 responder_ack(OKACK_TYPE, pkt->seq); // confirmar recebimento do nome
+                printf("recebeu nome");
                 break;
 
             case TAM_TYPE:
                 if (aguardando_arquivo && tipo_arquivo != -1 && nome_arquivo[0] != '\0') {
                     memcpy(&tamanho_arquivo, pkt->data, sizeof(int));
                     responder_ack(OKACK_TYPE, pkt->seq); // confirmar recebimento do tamanho
+                    printf("recebeu tamanho");
                     receber_arquivo(tipo_arquivo, nome_arquivo, tamanho_arquivo);
                     tipo_arquivo = -1;
                     aguardando_arquivo = 0;

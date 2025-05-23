@@ -76,6 +76,12 @@ void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho) {
     }
 }
 
+void responder_ack(byte_t tipo, byte_t seq) {
+    kermit_pckt_t ack;
+    gen_kermit_pckt(&ack, seq, tipo, NULL, 0);
+    sendto_rawsocket(socket_fd, &ack, sizeof(ack));
+}
+
 void verificar_resposta() {
     char buffer[BUF_SIZE];
     kermit_pckt_t *pkt = (kermit_pckt_t *)buffer;

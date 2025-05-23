@@ -51,7 +51,7 @@ void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho) {
     }
 
     printf("Recebendo arquivo: %s (%d bytes)\n", nome_arquivo, tamanho);
-    mapa[posicao_jogador.y][posicao_jogador.x] = 1; // Marca a posição atual como tendo um tesouro encontrado
+    mapa[posicao_jogador.y][posicao_jogador.x] = 1;
 
     while (1) {
         char buffer[BUF_SIZE];
@@ -60,7 +60,15 @@ void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho) {
         int bytes = recvfrom_rawsocket(socket_fd, TIMEOUT_MS, buffer, BUF_SIZE);
         if (bytes <= 0 || !valid_kermit_pckt(pkt)) continue;
 
+        // Verificação de integridade
         if (pkt->type == DATA_TYPE) {
+            if (!error_detection(pkt)) {
+                responder_ack(NACK_TYPE, pkt->seq);
+                continue;
+            }
+
+            responder_ack(OKACK_TYPE, pkt->seq);
+
             if (tipo == TEXT_ACK_NAME) {
                 pkt->data[pkt->size] = '\0';
                 printf("%s", pkt->data);
@@ -68,7 +76,10 @@ void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho) {
                 fwrite(pkt->data, 1, pkt->size, fp);
             }
             total_bytes += pkt->size;
-        } else if (pkt->type == END_FILE_TYPE) {
+        }
+
+        else if (pkt->type == END_FILE_TYPE) {
+            responder_ack(OKACK_TYPE, pkt->seq);  // Confirma recebimento do final
             if (fp) fclose(fp);
             printf("\nArquivo %s recebido (%d bytes).\n", nome_arquivo, total_bytes);
             return;
@@ -116,13 +127,13 @@ void verificar_resposta() {
                 memcpy(nome_arquivo, pkt->data, pkt->size);
                 nome_arquivo[pkt->size] = '\0';
                 aguardando_arquivo = 1;
-                responder_ack(ACK_TYPE, pkt->seq); // confirmar recebimento do nome
+                responder_ack(OKACK_TYPE, pkt->seq); // confirmar recebimento do nome
                 break;
 
             case TAM_TYPE:
                 if (aguardando_arquivo && tipo_arquivo != -1 && nome_arquivo[0] != '\0') {
                     memcpy(&tamanho_arquivo, pkt->data, sizeof(int));
-                    responder_ack(ACK_TYPE, pkt->seq); // confirmar recebimento do tamanho
+                    responder_ack(OKACK_TYPE, pkt->seq); // confirmar recebimento do tamanho
                     receber_arquivo(tipo_arquivo, nome_arquivo, tamanho_arquivo);
                     tipo_arquivo = -1;
                     aguardando_arquivo = 0;

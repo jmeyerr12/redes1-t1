@@ -66,8 +66,8 @@ void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho) {
                 responder_ack(NACK_TYPE, pkt->seq);
                 continue;
             }
-
             responder_ack(OKACK_TYPE, pkt->seq);
+            printf("ack enviado");
 
             if (tipo == TEXT_ACK_NAME) {
                 pkt->data[pkt->size] = '\0';

@@ -109,7 +109,7 @@ int verificar_tesouro() {
 
 void responder_movimento(byte_t tipo) {
     kermit_pckt_t resposta;
-    gen_kermit_pckt(&resposta, ultimo_seq++, tipo, NULL, 0);
+    gen_kermit_pckt(&resposta, 0, tipo, NULL, 0);
     sendto_rawsocket(socket_fd, &resposta, sizeof(resposta));
 }
 

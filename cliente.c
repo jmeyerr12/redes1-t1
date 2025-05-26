@@ -39,17 +39,13 @@ void enviar_movimento(char comando) {
 }
 
 void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho) {
-    FILE *fp = NULL;
-    int total_bytes = 0;
-
-    if (tipo != TEXT_ACK_NAME) {
-        fp = fopen(nome_arquivo, "wb");
-        if (!fp) {
-            perror("Erro ao criar arquivo");
-            return;
-        }
+    FILE *fp = fopen(nome_arquivo, "wb");
+    if (!fp) {
+        perror("Erro ao criar arquivo");
+        return;
     }
 
+    int total_bytes = 0;
     printf("Recebendo arquivo: %s (%d bytes)\n", nome_arquivo, tamanho);
     mapa[posicao_jogador.y][posicao_jogador.x] = 1;
 
@@ -60,25 +56,20 @@ void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho) {
         int bytes = recvfrom_rawsocket(socket_fd, TIMEOUT_MS, buffer, BUF_SIZE);
         if (bytes <= 0 || !valid_kermit_pckt(pkt)) continue;
 
-        // Verificação de integridade
         if (pkt->type == DATA_TYPE) {
-            /* if (!error_detection(pkt)) {
-                responder_ack(NACK_TYPE, pkt->seq);
-                continue;
-            } */
-            responder_ack(OKACK_TYPE, pkt->seq);
+            // Verificação de integridade (ativável se quiser)
+            // if (!error_detection(pkt)) {
+            //     responder_ack(NACK_TYPE, pkt->seq);
+            //     continue;
+            // }
 
-            if (tipo == TEXT_ACK_NAME) {
-                pkt->data[pkt->size] = '\0';
-                printf("%s", pkt->data);
-            } else {
-                fwrite(pkt->data, 1, pkt->size, fp);
-            }
+            responder_ack(OKACK_TYPE, pkt->seq);
+            fwrite(pkt->data, 1, pkt->size, fp);
             total_bytes += pkt->size;
         } else if (pkt->type == END_FILE_TYPE) {
-            responder_ack(OKACK_TYPE, pkt->seq);  // Confirma recebimento do final
-            if (fp) fclose(fp);
-            printf("\nArquivo %s recebido (%d bytes).\n", nome_arquivo, total_bytes);
+            responder_ack(OKACK_TYPE, pkt->seq);
+            fclose(fp);
+            printf("\n✅ Arquivo '%s' salvo com sucesso (%d bytes).\n", nome_arquivo, total_bytes);
             return;
         } else {
             print_kermit_pckt(pkt);

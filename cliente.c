@@ -48,20 +48,22 @@ void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho) {
     int total_bytes = 0;
     printf("Recebendo arquivo: %s (%d bytes)\n", nome_arquivo, tamanho);
     mapa[posicao_jogador.y][posicao_jogador.x] = 1;
-    int cont = 0;
+    //int cont = 0;
     while (1) {
         char buffer[BUF_SIZE];
         kermit_pckt_t *pkt = (kermit_pckt_t *)buffer;
 
         int bytes = recvfrom_rawsocket(socket_fd, TIMEOUT_MS, buffer, BUF_SIZE);
-        if (bytes == -1) responder_ack(NACK_TYPE, pkt->seq); //recvfrom_rawsocket ja valida se o pacote veio valido e retorna -1 se tiver algo errado
-        
+        if (bytes == -1) {
+            responder_ack(NACK_TYPE, pkt->seq); //recvfrom_rawsocket ja valida se o pacote veio valido e retorna -1 se tiver algo errado
+            printf("mandou nack\n");
+        }
         if (pkt->type == DATA_TYPE) {
             if (!valid_kermit_pckt(pkt)) {
                 continue;
             }
-            cont++;
-            printf("Recebendo: %d\n", total_bytes);
+            //cont++;
+            //printf("Recebendo: %d\n", total_bytes);
             responder_ack(OKACK_TYPE, pkt->seq);
             fwrite(pkt->data, 1, pkt->size, fp);
             total_bytes += pkt->size;

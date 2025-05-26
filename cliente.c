@@ -73,7 +73,7 @@ void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho) {
 
             char comando[128];
             if (tipo == TEXT_ACK_NAME) {
-                snprintf(comando, sizeof(comando), "nano \"%s\" &", nome_arquivo);
+                snprintf(comando, sizeof(comando), "gedit \"%s\" &", nome_arquivo);
                 system(comando);
             } else if (tipo == IMG_ACK_NAME || tipo == VIDEO_ACK_NAME) {
                 snprintf(comando, sizeof(comando), "xdg-open \"%s\" &", nome_arquivo);

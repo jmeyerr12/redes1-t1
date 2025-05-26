@@ -99,7 +99,8 @@ void enviar_arquivo(const char *caminho, int seq) {
 
     // 3. Dados
     size_t lidos;
-    while ((lidos = fread(dados, 1, DATA_SIZE, fp)) > 0) { //não ta recebendo o ack dos dados
+    while ((lidos = fread(dados, 1, DATA_SIZE, fp)) > 0) { 
+        printf("Enviando\n");
         gen_kermit_pckt(&pkt, seq, DATA_TYPE, dados, lidos);
         while (1) {
             sendto_rawsocket(socket_fd, &pkt, sizeof(pkt));

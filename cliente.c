@@ -62,7 +62,7 @@ void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho) {
             //     responder_ack(NACK_TYPE, pkt->seq);
             //     continue;
             // }
-
+            printf("Recebendo: %d\n", pkt->size);
             responder_ack(OKACK_TYPE, pkt->seq);
             fwrite(pkt->data, 1, pkt->size, fp);
             total_bytes += pkt->size;

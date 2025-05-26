@@ -1,6 +1,6 @@
 #include "raw_socket.h"
 
-#define TIMEOUT_SEC 2  // Timeout de 2 segundos
+#define TIMEOUT_SEC 10  // Timeout de 2 segundos
 
 int cria_raw_socket(char* nome_interface_rede) {
     int soquete = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));

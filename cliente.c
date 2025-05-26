@@ -48,7 +48,7 @@ void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho) {
     int total_bytes = 0;
     printf("Recebendo arquivo: %s (%d bytes)\n", nome_arquivo, tamanho);
     mapa[posicao_jogador.y][posicao_jogador.x] = 1;
-
+    int cont = 0;
     while (1) {
         char buffer[BUF_SIZE];
         kermit_pckt_t *pkt = (kermit_pckt_t *)buffer;
@@ -62,7 +62,8 @@ void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho) {
             //     responder_ack(NACK_TYPE, pkt->seq);
             //     continue;
             // }
-            printf("Recebendo: %d\n", pkt->size);
+            cont++;
+            printf("Recebendo: %d\n", cont);
             responder_ack(OKACK_TYPE, pkt->seq);
             fwrite(pkt->data, 1, pkt->size, fp);
             total_bytes += pkt->size;

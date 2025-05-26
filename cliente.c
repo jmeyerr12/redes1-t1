@@ -42,13 +42,13 @@ void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho) {
     FILE *fp = NULL;
     int total_bytes = 0;
 
-    //if (tipo != TEXT_ACK_NAME) {
+    if (tipo != TEXT_ACK_NAME) {
         fp = fopen(nome_arquivo, "wb");
         if (!fp) {
             perror("Erro ao criar arquivo");
             return;
         }
-   // }
+    }
 
     printf("Recebendo arquivo: %s (%d bytes)\n", nome_arquivo, tamanho);
     mapa[posicao_jogador.y][posicao_jogador.x] = 1;
@@ -68,12 +68,12 @@ void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho) {
             } */
             responder_ack(OKACK_TYPE, pkt->seq);
 
-            /* if (tipo == TEXT_ACK_NAME) {
+            if (tipo == TEXT_ACK_NAME) {
                 pkt->data[pkt->size] = '\0';
                 printf("%s", pkt->data);
-            } else { */
+            } else {
                 fwrite(pkt->data, 1, pkt->size, fp);
-            //}
+            }
             total_bytes += pkt->size;
         } else if (pkt->type == END_FILE_TYPE) {
             responder_ack(OKACK_TYPE, pkt->seq);  // Confirma recebimento do final

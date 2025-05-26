@@ -53,7 +53,7 @@ int recvfrom_rawsocket(int soquete, int timeoutMillis, char* buffer, int tamanho
         if (bytes_lidos == -1) continue; // timeout ou erro
         if (valid_kermit_pckt((kermit_pckt_t *)buffer)) {
             return bytes_lidos;
-        }
+        } else return -1;
     } while (timestamp() - comeco <= timeoutMillis);
     return -1;
 }

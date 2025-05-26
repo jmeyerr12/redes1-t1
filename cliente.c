@@ -54,15 +54,14 @@ void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho) {
         kermit_pckt_t *pkt = (kermit_pckt_t *)buffer;
 
         int bytes = recvfrom_rawsocket(socket_fd, TIMEOUT_MS, buffer, BUF_SIZE);
-        if (bytes <= 0 || !valid_kermit_pckt(pkt)) continue;
-
+        if (bytes == -1) responder_ack(NACK_TYPE, pkt->seq); //recvfrom_rawsocket ja valida se o pacote veio valido e retorna -1 se tiver algo errado
+        
         if (pkt->type == DATA_TYPE) {
             if (!valid_kermit_pckt(pkt)) {
-                responder_ack(NACK_TYPE, pkt->seq);
                 continue;
             }
             cont++;
-            printf("Recebendo: %d\n", cont);
+            printf("Recebendo: %d\n", total_bytes);
             responder_ack(OKACK_TYPE, pkt->seq);
             fwrite(pkt->data, 1, pkt->size, fp);
             total_bytes += pkt->size;

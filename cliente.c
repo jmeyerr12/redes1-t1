@@ -57,11 +57,9 @@ void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho) {
         char buffer[BUF_SIZE];
         kermit_pckt_t *pkt = (kermit_pckt_t *)buffer;
 
-        printf("entrou no while");
         int bytes = recvfrom_rawsocket(socket_fd, TIMEOUT_MS, buffer, BUF_SIZE);
         if (bytes <= 0 || !valid_kermit_pckt(pkt)) continue;
 
-        printf("vai passar no if");
         // Verificação de integridade
         if (pkt->type == DATA_TYPE) {
             if (!error_detection(pkt)) {
@@ -69,7 +67,6 @@ void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho) {
                 continue;
             }
             responder_ack(OKACK_TYPE, pkt->seq);
-            printf("ack enviado");
 
             if (tipo == TEXT_ACK_NAME) {
                 pkt->data[pkt->size] = '\0';
@@ -78,13 +75,13 @@ void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho) {
                 fwrite(pkt->data, 1, pkt->size, fp);
             }
             total_bytes += pkt->size;
-        }
-
-        else if (pkt->type == END_FILE_TYPE) {
+        } else if (pkt->type == END_FILE_TYPE) {
             responder_ack(OKACK_TYPE, pkt->seq);  // Confirma recebimento do final
             if (fp) fclose(fp);
             printf("\nArquivo %s recebido (%d bytes).\n", nome_arquivo, total_bytes);
             return;
+        } else {
+            print_kermit_pckt(pkt);
         }
     }
 }

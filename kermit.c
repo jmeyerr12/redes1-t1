@@ -6,7 +6,7 @@ void gen_kermit_pckt(kermit_pckt_t *kpckt, int seq, int type, void *data, size_t
     kpckt->init_marker = INIT_MARKER;
     kpckt->size = (num_data < DATA_SIZE) ? num_data : DATA_SIZE;
     kpckt->seq = seq;
-    kpckt->type = type;
+    kpckt->type = type; 
 
     if (data && kpckt->size > 0)
         memcpy(kpckt->data, data, kpckt->size);

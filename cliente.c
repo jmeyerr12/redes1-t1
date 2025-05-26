@@ -72,13 +72,8 @@ void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho) {
             printf("\nArquivo '%s' salvo com sucesso (%d bytes).\n", nome_arquivo, total_bytes);
 
             char comando[128];
-            if (tipo == TEXT_ACK_NAME) {
-                snprintf(comando, sizeof(comando), "xdg-open \"%s\" &", nome_arquivo);
-                system(comando);
-            } else if (tipo == IMG_ACK_NAME || tipo == VIDEO_ACK_NAME) {
-                snprintf(comando, sizeof(comando), "xdg-open \"%s\" &", nome_arquivo);
-                system(comando);
-            }
+            snprintf(comando, sizeof(comando), "xdg-open \"%s\" &", nome_arquivo);
+            system(comando);
             return;
         } else {
             print_kermit_pckt(pkt);

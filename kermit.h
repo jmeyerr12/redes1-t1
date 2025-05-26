@@ -23,7 +23,7 @@ typedef unsigned char byte_t;
 #define ACK_TYPE         (0x0)
 #define NACK_TYPE        (0x1)
 #define OKACK_TYPE       (0x2)
-#define LIVRE_TYPE       (0x3)
+#define LIVRE_TYPE       (0x3) // IDEIA : fazer ack que pede estado ao iniciar cliente (pede pro servidor mandar posição do jogador e tesouros ja encontrados)
 #define TAM_TYPE         (0x4)
 #define DATA_TYPE        (0x5)
 #define TEXT_ACK_NAME    (0x6)

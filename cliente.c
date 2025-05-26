@@ -62,10 +62,10 @@ void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho) {
 
         // Verificação de integridade
         if (pkt->type == DATA_TYPE) {
-            if (!error_detection(pkt)) {
+            /* if (!error_detection(pkt)) {
                 responder_ack(NACK_TYPE, pkt->seq);
                 continue;
-            }
+            } */
             responder_ack(OKACK_TYPE, pkt->seq);
 
             if (tipo == TEXT_ACK_NAME) {

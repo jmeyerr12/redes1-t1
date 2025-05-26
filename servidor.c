@@ -8,12 +8,21 @@ char buffer[BUF_SIZE];
 void carregar_tesouros() {
     srand(time(NULL));
 
+    int ocupado[GRID_SIZE][GRID_SIZE] = {0};
+    ocupado[0][0] = 1; // evita (0,0)
+
     for (int i = 0; i < MAX_TESOUROS; i++) {
-        tesouros[i].x = rand() % GRID_SIZE;
-        tesouros[i].y = rand() % GRID_SIZE;
+        int x, y;
+        do {
+            x = rand() % GRID_SIZE;
+            y = rand() % GRID_SIZE;
+        } while (ocupado[y][x]);
+
+        ocupado[y][x] = 1;
+        tesouros[i].x = x;
+        tesouros[i].y = y;
         tesouros[i].encontrado = 0;
 
-        // Monta o prefixo esperado (ex: "1", "2", ..., "8")
         char prefixo[3];
         snprintf(prefixo, sizeof(prefixo), "%d", i + 1);
 
@@ -25,10 +34,8 @@ void carregar_tesouros() {
 
         struct dirent *entry;
         while ((entry = readdir(dir)) != NULL) {
-            // Verifica se é um arquivo regular e se começa com o prefixo correto
             if (entry->d_type == DT_REG &&
                 strncmp(entry->d_name, prefixo, strlen(prefixo)) == 0) {
-                // Monta o caminho completo de forma segura
                 snprintf(tesouros[i].nome_arquivo, sizeof(tesouros[i].nome_arquivo),
                          "%s/%.55s", OBJETOS_DIR, entry->d_name);
                 break;

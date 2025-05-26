@@ -57,11 +57,10 @@ void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho) {
         if (bytes <= 0 || !valid_kermit_pckt(pkt)) continue;
 
         if (pkt->type == DATA_TYPE) {
-            // Verificação de integridade (ativável se quiser)
-            // if (!error_detection(pkt)) {
-            //     responder_ack(NACK_TYPE, pkt->seq);
-            //     continue;
-            // }
+            if (!valid_kermit_pckt(pkt)) {
+                responder_ack(NACK_TYPE, pkt->seq);
+                continue;
+            }
             cont++;
             printf("Recebendo: %d\n", cont);
             responder_ack(OKACK_TYPE, pkt->seq);

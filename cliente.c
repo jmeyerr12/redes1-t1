@@ -68,12 +68,12 @@ void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho) {
             } */
             responder_ack(OKACK_TYPE, pkt->seq);
 
-            if (tipo == TEXT_ACK_NAME) {
+            /* if (tipo == TEXT_ACK_NAME) {
                 pkt->data[pkt->size] = '\0';
                 printf("%s", pkt->data);
-            } else {
+            } else { */
                 fwrite(pkt->data, 1, pkt->size, fp);
-            }
+            //}
             total_bytes += pkt->size;
         } else if (pkt->type == END_FILE_TYPE) {
             responder_ack(OKACK_TYPE, pkt->seq);  // Confirma recebimento do final

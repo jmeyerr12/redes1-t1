@@ -42,13 +42,13 @@ void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho) {
     FILE *fp = NULL;
     int total_bytes = 0;
 
-    if (tipo != TEXT_ACK_NAME) {
+    //if (tipo != TEXT_ACK_NAME) {
         fp = fopen(nome_arquivo, "wb");
         if (!fp) {
             perror("Erro ao criar arquivo");
             return;
         }
-    }
+   // }
 
     printf("Recebendo arquivo: %s (%d bytes)\n", nome_arquivo, tamanho);
     mapa[posicao_jogador.y][posicao_jogador.x] = 1;

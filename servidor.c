@@ -193,7 +193,7 @@ int main(int argc, char *argv[]) {
         if (bytes <= 0) {
             printf("%d\n", quedas);
             /* nada chegou nestes 50 ms */
-            if (++quedas > 20) {               /* ≈5 s sem nada */
+            if (++quedas > 10) {               /* ≈5 s sem nada */
                 puts("[SERVIDOR] link ausente; reiniciando socket…");
                 close(socket_fd);
                 socket_fd = cria_raw_socket(argv[1]);

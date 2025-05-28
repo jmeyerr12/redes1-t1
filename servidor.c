@@ -4,6 +4,7 @@ Tesouro tesouros[MAX_TESOUROS];
 int pos_x = 0, pos_y = 0;
 int socket_fd;
 char buffer[BUF_SIZE];
+static int quedas = 0;
 
 void carregar_tesouros() {
     srand(time(NULL));
@@ -189,8 +190,16 @@ int main(int argc, char *argv[]) {
 
     while (1) {
         int bytes = recvfrom_rawsocket(socket_fd, TIMEOUT_MS, buffer, BUF_SIZE);
-        printf("maçã: %d\n", bytes);
-        if (bytes <= 0) continue;
+        if (bytes <= 0) {
+            /* nada chegou nestes 50 ms */
+            if (++quedas > 100) {               /* ≈5 s sem nada */
+                puts("[CLIENT] link ausente; reiniciando socket…");
+                close(socket_fd);
+                socket_fd = cria_raw_socket(argv[1]);
+                quedas = 0;
+            }
+            continue;
+        }
 
         kermit_pckt_t *pkt = (kermit_pckt_t *)buffer;
         if (!valid_kermit_pckt(pkt)) {

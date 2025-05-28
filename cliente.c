@@ -88,8 +88,7 @@ void responder_ack(byte_t tipo, byte_t seq) {
     sendto_rawsocket(socket_fd, &ack, sizeof(ack));
 }
 
-int verificar_resposta(void)
-{
+int verificar_resposta(void) {
     char  buffer[BUF_SIZE];
     kermit_pckt_t *pkt = (kermit_pckt_t *)buffer;
 
@@ -138,7 +137,7 @@ int verificar_resposta(void)
                     nome_arquivo[0] = '\0';
                     tipo_arquivo   = -1;
                     tamanho_arquivo= -1;
-                    return 1;     
+                    return 2;     
                 }
                 break;
 
@@ -150,8 +149,7 @@ int verificar_resposta(void)
     return -1;
 }
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     if (argc < 2) {
         fprintf(stderr, "Uso: %s <interface>\n", argv[0]);
         return EXIT_FAILURE;
@@ -175,12 +173,13 @@ int main(int argc, char *argv[])
             if (status == -1) printf("Reenviando comando…\n");
         } while (status == -1);
 
-        if (status == 1) {
+        if (status == 1 || status == 2) {
             if (cmd == 'w' && posicao_jogador.y < GRID_SIZE - 1) posicao_jogador.y++;
             if (cmd == 's' && posicao_jogador.y > 0)             posicao_jogador.y--;
             if (cmd == 'a' && posicao_jogador.x > 0)             posicao_jogador.x--;
             if (cmd == 'd' && posicao_jogador.x < GRID_SIZE - 1) posicao_jogador.x++;
         }
+        if (status == 2) mapa[posicao_jogador.y][posicao_jogador.x] = 1;
     }
 
     close(socket_fd);

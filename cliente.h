@@ -46,9 +46,11 @@ void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho);
 void desenhar_mapa(Posicao jogador);
 
 /*!
- * @brief @brief Verifica se o servidor iniciou o envio de um arquivo e, se sim, processa-o.
+ * @brief Verifica se o servidor iniciou o envio de um arquivo e, se sim, processa-o.
+ * 
+ * @return -1 se receber NACK, 0 caso contrario
  */
-void verificar_resposta();
+int verificar_resposta();
 
 void responder_ack(byte_t tipo, byte_t seq);
 

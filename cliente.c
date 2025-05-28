@@ -88,33 +88,36 @@ void responder_ack(byte_t tipo, byte_t seq) {
     sendto_rawsocket(socket_fd, &ack, sizeof(ack));
 }
 
-void verificar_resposta() {
-    char buffer[BUF_SIZE];
+int verificar_resposta(void)
+{
+    char  buffer[BUF_SIZE];
     kermit_pckt_t *pkt = (kermit_pckt_t *)buffer;
 
+    /* estado para download de arquivo */
     static char nome_arquivo[64] = "";
-    static int tipo_arquivo = -1;
-    static int aguardando_arquivo = 0;
-    static int tamanho_arquivo = -1;
+    static int  tipo_arquivo     = -1;
+    static int  aguardando_arquivo = 0;
+    static int  tamanho_arquivo    = -1;
 
     long long inicio = timestamp();
-    while (timestamp() - inicio < 500) {
-        int bytes = recvfrom_rawsocket(socket_fd, 50, buffer, BUF_SIZE); // timeout curto
-        if (bytes <= 0 || !valid_kermit_pckt(pkt)) continue;
 
+    while (timestamp() - inicio < 500)              /* janela total 500 ms */
+    {
+        int bytes = recvfrom_rawsocket(socket_fd, 50, buffer, BUF_SIZE); /* timeout parcial 50 ms */
+        if (bytes <= 0) continue;
+
+        if (!valid_kermit_pckt(pkt)) {              /* pacote corrompido   */
+            responder_ack(NACK_TYPE, pkt->seq);     /* pede retransmissão  */
+            continue;
+        }
+
+        /* --- respostas de movimentação --- */
+        if (pkt->type == OKACK_TYPE)  return  1;
+        if (pkt->type == ACK_TYPE)    return  0;
+        if (pkt->type == NACK_TYPE)   return -1;
+
+        /* --- início de envio de tesouro --- */
         switch (pkt->type) {
-            case OKACK_TYPE:
-                printf("Movimento realizado com sucesso (OKACK).\n");
-                break;
-
-            case ACK_TYPE:
-                printf("Comando reconhecido, mas movimento inválido (ACK).\n");
-                break;
-
-            case NACK_TYPE:
-                printf("Servidor não recebeu o comando corretamente (NACK).\n");
-                break;
-
             case TEXT_ACK_NAME:
             case IMG_ACK_NAME:
             case VIDEO_ACK_NAME:
@@ -122,30 +125,33 @@ void verificar_resposta() {
                 memcpy(nome_arquivo, pkt->data, pkt->size);
                 nome_arquivo[pkt->size] = '\0';
                 aguardando_arquivo = 1;
-                responder_ack(OKACK_TYPE, pkt->seq); // confirmar recebimento do nome
+                responder_ack(OKACK_TYPE, pkt->seq);   
                 break;
 
             case TAM_TYPE:
-                if (aguardando_arquivo && tipo_arquivo != -1 && nome_arquivo[0] != '\0') {
+                if (aguardando_arquivo && nome_arquivo[0]) {
                     memcpy(&tamanho_arquivo, pkt->data, sizeof(int));
-                    responder_ack(OKACK_TYPE, pkt->seq); // confirmar recebimento do tamanho
+                    responder_ack(OKACK_TYPE, pkt->seq);  /* ACK do tamanho */
                     receber_arquivo(tipo_arquivo, nome_arquivo, tamanho_arquivo);
-                    tipo_arquivo = -1;
+                    /* limpa estado */
                     aguardando_arquivo = 0;
                     nome_arquivo[0] = '\0';
-                    tamanho_arquivo = -1;
-                    return;
+                    tipo_arquivo   = -1;
+                    tamanho_arquivo= -1;
+                    return 1;     
                 }
                 break;
 
             default:
-                // Ignora tipos que não fazem sentido neste contexto
                 break;
         }
     }
+    /* tempo total (500 ms) esgotado sem resposta útil */
+    return -1;
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
     if (argc < 2) {
         fprintf(stderr, "Uso: %s <interface>\n", argv[0]);
         return EXIT_FAILURE;
@@ -157,20 +163,24 @@ int main(int argc, char *argv[]) {
     while (1) {
         desenhar_mapa(posicao_jogador);
         printf("Posição atual: (%d, %d) > ", posicao_jogador.x, posicao_jogador.y);
-        char comando = getchar();
-        while (getchar() != '\n'); // limpar buffer
 
-        if (comando == 'q') break;
+        char cmd = getchar();
+        while (getchar() != '\n');
+        if (cmd == 'q') break;
 
-        enviar_movimento(comando);
-        switch (comando) {
-            case 'w': if (posicao_jogador.y < GRID_SIZE - 1) posicao_jogador.y++; break;
-            case 's': if (posicao_jogador.y > 0) posicao_jogador.y--; break;
-            case 'a': if (posicao_jogador.x > 0) posicao_jogador.x--; break;
-            case 'd': if (posicao_jogador.x < GRID_SIZE - 1) posicao_jogador.x++; break;
+        int status;
+        do {
+            enviar_movimento(cmd);
+            status = verificar_resposta();          /* 1 = OKACK, 0 = ACK, -1 = NACK/timeout */
+            if (status == -1) printf("Reenviando comando…\n");
+        } while (status == -1);
+
+        if (status == 1) {
+            if (cmd == 'w' && posicao_jogador.y < GRID_SIZE - 1) posicao_jogador.y++;
+            if (cmd == 's' && posicao_jogador.y > 0)             posicao_jogador.y--;
+            if (cmd == 'a' && posicao_jogador.x > 0)             posicao_jogador.x--;
+            if (cmd == 'd' && posicao_jogador.x < GRID_SIZE - 1) posicao_jogador.x++;
         }
-
-        verificar_resposta();
     }
 
     close(socket_fd);

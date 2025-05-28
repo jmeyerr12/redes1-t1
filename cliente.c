@@ -99,7 +99,7 @@ int verificar_resposta(void) {
 
     long long inicio = timestamp();
 
-    while (timestamp() - inicio < 500)              /* janela total 500 ms */
+    while (timestamp() - inicio < 2000)              /* janela total 500 ms */
     {
         int bytes = recvfrom_rawsocket(socket_fd, 50, buffer, BUF_SIZE); /* timeout parcial 50 ms */
         if (bytes <= 0) continue;

@@ -47,7 +47,6 @@ void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho) {
 
     int total_bytes = 0;
     printf("Recebendo arquivo: %s (%d bytes)\n", nome_arquivo, tamanho);
-    mapa[posicao_jogador.y][posicao_jogador.x] = 1;
     //int cont = 0;
     while (1) {
         char buffer[BUF_SIZE];

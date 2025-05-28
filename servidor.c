@@ -189,6 +189,7 @@ int main(int argc, char *argv[]) {
 
     while (1) {
         int bytes = recvfrom_rawsocket(socket_fd, TIMEOUT_MS, buffer, BUF_SIZE);
+        printf("maçã: %d\n", bytes);
         if (bytes <= 0) continue;
 
         kermit_pckt_t *pkt = (kermit_pckt_t *)buffer;

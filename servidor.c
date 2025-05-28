@@ -191,15 +191,16 @@ int main(int argc, char *argv[]) {
     while (1) {
         int bytes = recvfrom_rawsocket(socket_fd, TIMEOUT_MS, buffer, BUF_SIZE);
         if (bytes <= 0) {
+            printf("%d\n", quedas);
             /* nada chegou nestes 50 ms */
-            if (++quedas > 100) {               /* ≈5 s sem nada */
-                puts("[CLIENT] link ausente; reiniciando socket…");
+            if (++quedas > 20) {               /* ≈5 s sem nada */
+                puts("[SERVIDOR] link ausente; reiniciando socket…");
                 close(socket_fd);
                 socket_fd = cria_raw_socket(argv[1]);
                 quedas = 0;
             }
             continue;
-        }
+        } else quedas = 0;
 
         kermit_pckt_t *pkt = (kermit_pckt_t *)buffer;
         if (!valid_kermit_pckt(pkt)) {

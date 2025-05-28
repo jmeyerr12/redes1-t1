@@ -34,7 +34,7 @@ typedef unsigned char byte_t;
 #define MOVER_CIMA       (0xB)
 #define MOVER_BAIXO      (0xC)
 #define MOVER_ESQ        (0xD)
-#define LIVRE2_TYPE      (0xE)
+#define LIVRE2_TYPE      (0xE) // IDEIA: fazer um que manda sem nada só pra avisar que ainda esta ON
 #define ERROR_TYPE       (0xF)
 
 // Códigos de erro

@@ -4,6 +4,8 @@ int socket_fd;
 int seq = 0;
 Posicao posicao_jogador = {0, 0};
 int mapa[GRID_SIZE][GRID_SIZE] = {0}; // 0 = vazio, 1 = tesouro encontrado
+static int quedas = 0;
+char *interface;
 
 void desenhar_mapa(Posicao jogador) {
     printf("\n==== MAPA ====\n");
@@ -87,7 +89,7 @@ void responder_ack(byte_t tipo, byte_t seq) {
     sendto_rawsocket(socket_fd, &ack, sizeof(ack));
 }
 
-int verificar_resposta(void) {
+int verificar_resposta() {
     char  buffer[BUF_SIZE];
     kermit_pckt_t *pkt = (kermit_pckt_t *)buffer;
 
@@ -102,7 +104,20 @@ int verificar_resposta(void) {
     while (timestamp() - inicio < 2000)              /* janela total 500 ms */
     {
         int bytes = recvfrom_rawsocket(socket_fd, 50, buffer, BUF_SIZE); /* timeout parcial 50 ms */
-        if (bytes <= 0) continue;
+        
+        if (bytes <= 0) {
+            /* nada chegou nestes 50 ms */
+            if (++quedas > 100) {               /* ≈5 s sem nada */
+                puts("[CLIENT] link ausente; reiniciando socket…");
+                close(socket_fd);
+                socket_fd = cria_raw_socket(interface);
+                quedas = 0;
+            }
+            continue;
+        }
+
+        /* pacote chegou: zera contador de quedas */
+        quedas = 0;
 
         if (!valid_kermit_pckt(pkt)) {              /* pacote corrompido   */
             responder_ack(NACK_TYPE, pkt->seq);     /* pede retransmissão  */
@@ -154,7 +169,9 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    socket_fd = cria_raw_socket(argv[1]);
+    interface = argv[1];
+
+    socket_fd = cria_raw_socket(interface);
     printf("Cliente iniciado. Use W/A/S/D para mover. Q para sair.\n");
 
     while (1) {

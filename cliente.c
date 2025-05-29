@@ -182,6 +182,7 @@ int main(int argc, char *argv[]) {
 
         // enquanto limpa o buffer de entrada, também verifica o tempo
         while (getchar() != '\n') {
+            printf("abababa");
             if (timestamp() - inicio >= 3000) {
                 kermit_pckt_t ping;
                 gen_kermit_pckt(&ping, 0, IDLE_TYPE, NULL, 0);

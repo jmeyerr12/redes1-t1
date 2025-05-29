@@ -108,7 +108,7 @@ int verificar_resposta() {
         if (bytes <= 0) {
             /* nada chegou nestes 50 ms */
             if (++quedas > 100) {               /* ≈5 s sem nada */
-                puts("[CLIENT] link ausente; reiniciando socket…");
+                puts("[CLIENTE] link ausente; reiniciando socket…");
                 close(socket_fd);
                 socket_fd = cria_raw_socket(interface);
                 quedas = 0;
@@ -159,7 +159,7 @@ int verificar_resposta() {
                 break;
         }
     }
-    /* tempo total (500 ms) esgotado sem resposta útil */
+    /* tempo total (2000 ms) esgotado sem resposta útil */
     return -1;
 }
 

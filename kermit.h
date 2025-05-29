@@ -6,7 +6,7 @@
 #define BUF_SIZE (1024 + 1)  // Buffer auxiliar
 #define DATA_SIZE (127)      // Tamanho máximo do campo de dados
 
-#define TIMEOUT_MS (2000)
+#define TIMEOUT_MS (50)
 #define TIMEOUT_PROB (980)  // Probabilidade de timeout (para simulações)
 #define TIMEOUT_LIMIT (5)
 

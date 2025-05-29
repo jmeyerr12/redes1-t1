@@ -86,7 +86,6 @@ void enviar_arquivo(const char *caminho, int seq) {
     while (1) {
         sendto_rawsocket(socket_fd, &pkt, sizeof(pkt));
         int bytes = recvfrom_rawsocket(socket_fd, TIMEOUT_MS, ack_buf, BUF_SIZE);
-        resp = (kermit_pckt_t *)ack_buf;
         if (bytes > 0 && valid_kermit_pckt(resp) && resp->seq == pkt.seq) {
             if (resp->type == OKACK_TYPE) break;
         }
@@ -98,7 +97,6 @@ void enviar_arquivo(const char *caminho, int seq) {
     while (1) {
         sendto_rawsocket(socket_fd, &pkt, sizeof(pkt));
         int bytes = recvfrom_rawsocket(socket_fd, TIMEOUT_MS, ack_buf, BUF_SIZE);
-        resp = (kermit_pckt_t *)ack_buf;
         if (bytes > 0 && valid_kermit_pckt(resp) && resp->seq == pkt.seq) {
             if (resp->type == OKACK_TYPE) break;
         }
@@ -115,7 +113,6 @@ void enviar_arquivo(const char *caminho, int seq) {
         while (1) {
             sendto_rawsocket(socket_fd, &pkt, sizeof(pkt));
             int bytes = recvfrom_rawsocket(socket_fd, TIMEOUT_MS, ack_buf, BUF_SIZE);
-            resp = (kermit_pckt_t *)ack_buf;
             if (bytes > 0 && valid_kermit_pckt(resp) && resp->seq == pkt.seq) {
                 if (resp->type == OKACK_TYPE) break;
             }
@@ -193,7 +190,7 @@ int main(int argc, char *argv[]) {
         if (bytes <= 0) {
             printf("%d\n", quedas);
             /* nada chegou nestes 50 ms */
-            if (++quedas > 10) {               /* ≈5 s sem nada */
+            if (++quedas > 100) {               /* ≈5 s sem nada */
                 puts("[SERVIDOR] link ausente; reiniciando socket…");
                 close(socket_fd);
                 socket_fd = cria_raw_socket(argv[1]);

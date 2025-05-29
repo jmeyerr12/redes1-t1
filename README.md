@@ -59,4 +59,4 @@ Este projeto foi desenvolvido para fins acadêmicos, simulando comunicação de 
 ## To-do
 - Consegui fazer funcionar andar desconectando cabo, mas na transmissão de arquivos isso ainda não funciona efetivamente
 - Arrumar recebimento/envio de vídeo
-- Tratamento de erros fora NACK comum
+- Tratamento de erros fora NACK comum (tamanho do arquivo maior que o tamanho disponível por exemplo precisa fazer ainda)

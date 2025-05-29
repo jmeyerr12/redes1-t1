@@ -61,5 +61,5 @@ Este projeto foi desenvolvido para fins acadêmicos, simulando comunicação de 
 - Arrumar recebimento/envio de vídeo
 - Tratamento de erros fora NACK comum (tamanho do arquivo maior que o tamanho disponível por exemplo precisa fazer ainda)
 - Fazer algoritmo pro seq: "Para verificar se uma sequência vem depois da outra, pense na diferença das sequências: É grande o suficiente pra estarem no meio, ou nas bordas? O algoritmo que você vai acabar criando é aquele de aritmética de números seriais." Não lembro de ter implementado isso
-- Em algum momento ta tendo movimento duplicado (APARENTEMENTE RESOLVI)
+- Em algum momento ta tendo movimento duplicado (RESOLVI PARTE, AINDA TEM ALGO DE ESTRANHO)
 - Usar ultimo tipo livre pra fazer sincronização de dados com o servidor (localização do player, tesouros encontrados)

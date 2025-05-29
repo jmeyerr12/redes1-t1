@@ -154,7 +154,7 @@ void processar_movimento(byte_t tipo) {
         case MOVER_CIMA: if (pos_y < GRID_SIZE - 1) pos_y++; else movimento_valido = 0; break;
         case MOVER_BAIXO:if (pos_y > 0) pos_y--; else movimento_valido = 0; break;
         default:
-            responder_movimento(NACK_TYPE); // tipo de movimento inválido
+            responder_movimento(ACK_TYPE); // tipo de movimento inválido
             return;
     }
 

@@ -166,12 +166,12 @@ void enviar_ping(int sig) {
     kermit_pckt_t ping;
     gen_kermit_pckt(&ping, 0, IDLE_TYPE, NULL, 0);
     sendto_rawsocket(socket_fd, &ping, sizeof(ping));
-    alarm(3); // agenda próximo ping
+    alarm(4); // agenda próximo ping
 }
 
 int main(int argc, char *argv[]) {
     signal(SIGALRM, enviar_ping); // define a função que roda a cada alarme
-    alarm(3); // agenda o primeiro alarme para daqui 3s
+    alarm(4); // agenda o primeiro alarme para daqui 3s
     if (argc < 2) {
         fprintf(stderr, "Uso: %s <interface>\n", argv[0]);
         return EXIT_FAILURE;
@@ -207,7 +207,7 @@ int main(int argc, char *argv[]) {
         }
         if (status == 2) mapa[posicao_jogador.y][posicao_jogador.x] = 1;
 
-        alarm(3);
+        alarm(4);
     }
 
     close(socket_fd);

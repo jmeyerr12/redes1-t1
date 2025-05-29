@@ -124,9 +124,9 @@ int verificar_resposta() {
         }
 
         /* --- respostas de movimentação --- */
-        if (pkt->type == OKACK_TYPE)  return  1;
-        if (pkt->type == ACK_TYPE)    return  0;
-        if (pkt->type == NACK_TYPE)   return -1;
+        if (pkt->type == OKACK_TYPE) return  1;
+        if (pkt->type == ACK_TYPE) return  0;
+        if (pkt->type == NACK_TYPE) {printf("aaaaa");return -1;}
 
         /* --- início de envio de tesouro --- */
         switch (pkt->type) {

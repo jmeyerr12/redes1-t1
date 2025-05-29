@@ -189,6 +189,9 @@ int main(int argc, char *argv[]) {
 
     while (1) {
         int bytes = recvfrom_rawsocket(socket_fd, TIMEOUT_MS, buffer, BUF_SIZE);
+        //print_kermit_pckt((kermit_pckt_t *) buffer);
+        kermit_pckt_t *pckt = (kermit_pckt_t *) buffer;
+        if (pckt->type == (0xE)) printf("%d\n", pckt->type);
         if (bytes <= 0) {
             /* nada chegou nestes 50 ms */
             if (++quedas > 100) {               /* ≈5 s sem nada */

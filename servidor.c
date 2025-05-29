@@ -209,8 +209,8 @@ int main(int argc, char *argv[]) {
             continue;
         }
 
-        if (pkt->type >= MOVER_DIR && pkt->type <= MOVER_ESQ) processar_movimento(pkt->type);
-        else if (pkt->type == ERROR_TYPE) responder_movimento(NACK_TYPE);
+        if (pkt->type >= MOVER_DIR && pkt->type <= MOVER_ESQ) processar_movimento(pkt->type); //aqui ja manda nack
+        //else if (pkt->type == ERROR_TYPE) responder_movimento(NACK_TYPE);
     }
 
     return 0;

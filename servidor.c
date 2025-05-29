@@ -149,11 +149,12 @@ void processar_movimento(byte_t tipo) {
     int movimento_valido = 1;
 
     switch (tipo) {
-        case MOVER_DIR:  if (pos_x < GRID_SIZE - 1) pos_x++; else movimento_valido = 0; break;
-        case MOVER_ESQ:  if (pos_x > 0) pos_x--; else movimento_valido = 0; break;
+        case MOVER_DIR: if (pos_x < GRID_SIZE - 1) pos_x++; else movimento_valido = 0; break;
+        case MOVER_ESQ: if (pos_x > 0) pos_x--; else movimento_valido = 0; break;
         case MOVER_CIMA: if (pos_y < GRID_SIZE - 1) pos_y++; else movimento_valido = 0; break;
-        case MOVER_BAIXO:if (pos_y > 0) pos_y--; else movimento_valido = 0; break;
+        case MOVER_BAIXO: if (pos_y > 0) pos_y--; else movimento_valido = 0; break;
         default:
+            printf("Tipo de movimento inválido");
             responder_movimento(ACK_TYPE); // tipo de movimento inválido
             return;
     }

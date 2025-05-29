@@ -55,3 +55,8 @@ sudo ./cliente <interface>
 ## Observações
 
 Este projeto foi desenvolvido para fins acadêmicos, simulando comunicação de baixo nível e mecanismos confiáveis de transmissão de dados.
+
+## To-do
+- Consegui fazer funcionar andar desconectando cabo, mas na transmissão de arquivos isso ainda não funciona efetivamente
+- Arrumar recebimento/envio de vídeo
+- Tratamento de erros fora NACK comum

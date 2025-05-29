@@ -172,25 +172,21 @@ int main(int argc, char *argv[]) {
 
     socket_fd = cria_raw_socket(interface);
     printf("Cliente iniciado. Use W/A/S/D para mover. Q para sair.\n");
+    long long ultimo = timestamp();
 
     while (1) {
         desenhar_mapa(posicao_jogador);
         printf("Posição atual: (%d, %d) > ", posicao_jogador.x, posicao_jogador.y);
 
+    if (timestamp() - ultimo >= 3000) {
+        kermit_pckt_t ping;
+        gen_kermit_pckt(&ping, 0, IDLE_TYPE, NULL, 0);
+        sendto_rawsocket(socket_fd, &ping, sizeof(ping));
+        ultimo = timestamp(); // reseta o tempo após envio do ping
+    }
+
         char cmd = getchar();
-        unsigned long inicio = timestamp();
-
-        // enquanto limpa o buffer de entrada, também verifica o tempo
-        while (getchar() != '\n') {
-            printf("abababa");
-            if (timestamp() - inicio >= 3000) {
-                kermit_pckt_t ping;
-                gen_kermit_pckt(&ping, 0, IDLE_TYPE, NULL, 0);
-                sendto_rawsocket(socket_fd, &ping, sizeof(ping));
-                inicio = timestamp(); // reinicia o contador para enviar novamente se demorar mais 3s
-            }
-        }
-
+        while (getchar() != '\n');
         if (cmd == 'q') break;
 
         int status = 0;
@@ -209,6 +205,7 @@ int main(int argc, char *argv[]) {
             if (cmd == 'd' && posicao_jogador.x < GRID_SIZE - 1) posicao_jogador.x++;
         }
         if (status == 2) mapa[posicao_jogador.y][posicao_jogador.x] = 1;
+        ultimo = timestamp()
     }
 
     close(socket_fd);

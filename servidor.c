@@ -86,8 +86,9 @@ void enviar_arquivo(const char *caminho, int seq) {
     while (1) {
         sendto_rawsocket(socket_fd, &pkt, sizeof(pkt));
         int bytes = recvfrom_rawsocket(socket_fd, TIMEOUT_MS, ack_buf, BUF_SIZE);
-        if (bytes > 0 && valid_kermit_pckt(resp) && resp->seq == pkt.seq) {
+        if (bytes > 0 && valid_kermit_pckt(resp) && resp->seq == pkt.seq) { //resp é ack buf com casting pra tipo do pacote kermit
             if (resp->type == OKACK_TYPE) break;
+            if (resp->type == NACK_TYPE) continue; // reenviar
         }
     }
     seq++;
@@ -99,22 +100,21 @@ void enviar_arquivo(const char *caminho, int seq) {
         int bytes = recvfrom_rawsocket(socket_fd, TIMEOUT_MS, ack_buf, BUF_SIZE);
         if (bytes > 0 && valid_kermit_pckt(resp) && resp->seq == pkt.seq) {
             if (resp->type == OKACK_TYPE) break;
+            if (resp->type == NACK_TYPE) continue;
         }
     }
     seq++;
 
     // 3. Dados
     size_t lidos;
-    //int cont = 0;
-    while ((lidos = fread(dados, 1, DATA_SIZE, fp)) > 0) { 
-        //cont++;
-        //printf("Enviando: %d\n", cont);
+    while ((lidos = fread(dados, 1, DATA_SIZE, fp)) > 0) {
         gen_kermit_pckt(&pkt, seq, DATA_TYPE, dados, lidos);
         while (1) {
             sendto_rawsocket(socket_fd, &pkt, sizeof(pkt));
             int bytes = recvfrom_rawsocket(socket_fd, TIMEOUT_MS, ack_buf, BUF_SIZE);
             if (bytes > 0 && valid_kermit_pckt(resp) && resp->seq == pkt.seq) {
                 if (resp->type == OKACK_TYPE) break;
+                if (resp->type == NACK_TYPE) {continue;printf("reenviando\n");}
             }
         }
         seq++;
@@ -188,7 +188,6 @@ int main(int argc, char *argv[]) {
     while (1) {
         int bytes = recvfrom_rawsocket(socket_fd, TIMEOUT_MS, buffer, BUF_SIZE);
         if (bytes <= 0) {
-            printf("%d\n", quedas);
             /* nada chegou nestes 50 ms */
             if (++quedas > 100) {               /* ≈5 s sem nada */
                 puts("[SERVIDOR] link ausente; reiniciando socket…");

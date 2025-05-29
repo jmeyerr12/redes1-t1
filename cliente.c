@@ -181,7 +181,7 @@ int main(int argc, char *argv[]) {
         while (getchar() != '\n');
         if (cmd == 'q') break;
 
-        int status;
+        int status = 0;
         do {
             if (cmd == 'w' || cmd == 'a' || cmd == 's' || cmd == 'd') {
                 enviar_movimento(cmd);

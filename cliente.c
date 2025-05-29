@@ -183,7 +183,8 @@ int main(int argc, char *argv[]) {
 
         int status;
         do {
-            enviar_movimento(cmd);
+            if (cmd == 'w' || cmd == 'a' || cmd == 's' || cmd == 'd') enviar_movimento(cmd);
+            else printf("Comando inválido: %c\n", cmd); 
             status = verificar_resposta();          /* 1 = OKACK, 0 = ACK, -1 = NACK/timeout */
             if (status == -1) printf("Reenviando comando…\n");
         } while (status == -1);

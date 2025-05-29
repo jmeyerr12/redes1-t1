@@ -205,7 +205,7 @@ int main(int argc, char *argv[]) {
             if (cmd == 'd' && posicao_jogador.x < GRID_SIZE - 1) posicao_jogador.x++;
         }
         if (status == 2) mapa[posicao_jogador.y][posicao_jogador.x] = 1;
-        ultimo = timestamp()
+        ultimo = timestamp();
     }
 
     close(socket_fd);

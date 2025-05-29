@@ -119,6 +119,7 @@ int verificar_resposta() {
         quedas = 0;
 
         if (!valid_kermit_pckt(pkt)) {              /* pacote corrompido   */
+            printf("carniça");
             responder_ack(NACK_TYPE, pkt->seq);     /* pede retransmissão  */
             continue;
         }

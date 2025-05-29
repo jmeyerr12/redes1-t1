@@ -6,6 +6,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <signal.h> //usada para o ping
 
 #include "raw_socket.h"
 #include "kermit.h"

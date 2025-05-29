@@ -34,8 +34,9 @@ typedef unsigned char byte_t;
 #define MOVER_CIMA       (0xB)
 #define MOVER_BAIXO      (0xC)
 #define MOVER_ESQ        (0xD)
-#define LIVRE2_TYPE      (0xE) // IDEIA: fazer um que manda sem nada só pra avisar que ainda esta ON de tempo em tempo (ou em caso de inatividade do cliente)
-#define ERROR_TYPE       (0xF)
+//#define LIVRE2_TYPE      (0xE) // IDEIA: fazer um que manda sem nada só pra avisar que ainda esta ON de tempo em tempo (ou em caso de inatividade do cliente) -- to implementando ja
+#define IDLE_TYPE (0xE) //acho que so mexe no cliente mesmo
+#define ERROR_TYPE       (0xF) // tem que ver isso ainda
 
 // Códigos de erro
 #define ERR_NO_PERMISSION   (0x0)

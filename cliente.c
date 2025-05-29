@@ -172,6 +172,7 @@ int main(int argc, char *argv[]) {
 
     socket_fd = cria_raw_socket(interface);
     printf("Cliente iniciado. Use W/A/S/D para mover. Q para sair.\n");
+    long long ultimo = timestamp();
 
     while (1) {
         desenhar_mapa(posicao_jogador);
@@ -197,6 +198,18 @@ int main(int argc, char *argv[]) {
             if (cmd == 'd' && posicao_jogador.x < GRID_SIZE - 1) posicao_jogador.x++;
         }
         if (status == 2) mapa[posicao_jogador.y][posicao_jogador.x] = 1;
+
+        ultimo = timestamp(); // atualiza tempo do último comando
+
+        // envia ping se passou tempo demais sem interação
+        while (timestamp() - ultimo < 3000) {
+            usleep(100 * 1000); // espera 100ms
+        }
+
+        // enviar pacote vazio
+        kermit_pckt_t ping;
+        gen_kermit_pckt(&ping, 0, IDLE_TYPE, NULL, 0); // defina IDLE_TYPE no enum
+        sendto_rawsocket(socket_fd, &ping, sizeof(ping));
     }
 
     close(socket_fd);

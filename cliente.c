@@ -61,7 +61,7 @@ void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho) {
             continue;
         }
         if (pkt->type == DATA_TYPE) {
-            if (!valid_kermit_pckt(pkt)) continue;
+            if (!valid_kermit_pckt(pkt)) {printf("xabu"); continue;}
 
             if (pkt->seq == ultima_seq) {
                 responder_ack(OKACK_TYPE, pkt->seq); // reenviar ACK para o mesmo pacote

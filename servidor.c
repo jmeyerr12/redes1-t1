@@ -120,7 +120,6 @@ void enviar_arquivo(const char *caminho, int seq) {
         }
         seq++;
     }
-
     // 4. Finalizador (sem ACK obrigatório)
     gen_kermit_pckt(&pkt, seq++, END_FILE_TYPE, NULL, 0);
     sendto_rawsocket(socket_fd, &pkt, sizeof(pkt));
@@ -173,8 +172,8 @@ void processar_movimento(byte_t tipo) {
         enviar_arquivo(tesouros[id].nome_arquivo, 0);
     } else {
         printf("Jogador moveu para: (%d, %d)\n", pos_x, pos_y);
+        responder_movimento(OKACK_TYPE); // movimento realizado com sucesso
     }
-    responder_movimento(OKACK_TYPE); // movimento realizado com sucesso
 }
 
 int main(int argc, char *argv[]) {

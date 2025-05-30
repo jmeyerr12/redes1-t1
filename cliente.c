@@ -57,6 +57,7 @@ void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho) {
         int bytes = recvfrom_rawsocket(socket_fd, TIMEOUT_MS, buffer, BUF_SIZE);
         if (bytes == -1) {
             responder_ack(NACK_TYPE, pkt->seq); //recvfrom_rawsocket ja valida se o pacote veio valido e retorna -1 se tiver algo errado
+            continue;
         }
         if (pkt->type == DATA_TYPE) {
             if (!valid_kermit_pckt(pkt)) {
@@ -65,6 +66,7 @@ void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho) {
             //cont++;
             //printf("Recebendo: %d\n", total_bytes);
             responder_ack(OKACK_TYPE, pkt->seq);
+            printf("Gravando %d bytes (seq %d)\n", pkt->size, pkt->seq);
             fwrite(pkt->data, 1, pkt->size, fp);
             total_bytes += pkt->size;
         } else if (pkt->type == END_FILE_TYPE) {

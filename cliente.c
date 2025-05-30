@@ -48,6 +48,7 @@ void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho) {
     }
 
     int total_bytes = 0;
+    int ultima_seq = -1; 
     printf("Recebendo arquivo: %s (%d bytes)\n", nome_arquivo, tamanho);
     //int cont = 0;
     while (1) {
@@ -60,15 +61,18 @@ void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho) {
             continue;
         }
         if (pkt->type == DATA_TYPE) {
-            if (!valid_kermit_pckt(pkt)) {
-                continue;
+            if (!valid_kermit_pckt(pkt)) continue;
+
+            if (pkt->seq == ultima_seq) {
+                responder_ack(OKACK_TYPE, pkt->seq); // reenviar ACK para o mesmo pacote
+                continue; // ignora gravação duplicada
             }
-            //cont++;
-            //printf("Recebendo: %d\n", total_bytes);
+
             responder_ack(OKACK_TYPE, pkt->seq);
             printf("Gravando %d bytes (seq %d)\n", pkt->size, pkt->seq);
             fwrite(pkt->data, 1, pkt->size, fp);
             total_bytes += pkt->size;
+            ultima_seq = pkt->seq;
         } else if (pkt->type == END_FILE_TYPE) {
             responder_ack(OKACK_TYPE, pkt->seq);
             fclose(fp);

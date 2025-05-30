@@ -57,6 +57,7 @@ void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho) {
 
         int bytes = recvfrom_rawsocket(socket_fd, TIMEOUT_MS, buffer, BUF_SIZE);
         if (bytes == -1) {
+            printf("abacaxi");
             responder_ack(NACK_TYPE, pkt->seq); //recvfrom_rawsocket ja valida se o pacote veio valido e retorna -1 se tiver algo errado
             continue;
         }

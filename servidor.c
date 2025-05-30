@@ -115,7 +115,7 @@ void enviar_arquivo(const char *caminho, int seq) {
             int bytes = recvfrom_rawsocket(socket_fd, TIMEOUT_MS, ack_buf, BUF_SIZE);
             if (bytes > 0 && valid_kermit_pckt(resp) && resp->seq == pkt.seq) {
                 if (resp->type == OKACK_TYPE) break;
-                if (resp->type == NACK_TYPE) {printf("reenviando\n");continue;}
+                if (resp->type == NACK_TYPE) {/* printf("reenviando\n"); */continue;}
             }
         }
         seq++;

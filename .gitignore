@@ -2,3 +2,6 @@ servidor
 cliente
 *.o
 .vscode
+*.mp4
+*.txt
+*.jpg

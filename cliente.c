@@ -69,7 +69,7 @@ void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho) {
             }
 
             responder_ack(OKACK_TYPE, pkt->seq);
-            printf("Gravando %d bytes (seq %d)\n", pkt->size, pkt->seq);
+            //printf("Gravando %d bytes (seq %d)\n", pkt->size, pkt->seq);
             fwrite(pkt->data, 1, pkt->size, fp);
             total_bytes += pkt->size;
             ultima_seq = pkt->seq;

@@ -3,10 +3,10 @@
 void gen_kermit_pckt(kermit_pckt_t *kpckt, int seq, int type, void *data, size_t num_data) {
     memset(kpckt, 0, sizeof(*kpckt));
 
-    kp->init_marker = INIT_MARKER;
-    kp->size = (len < DATA_SIZE) ? len : DATA_SIZE;
-    kp->seq  = seq & 0x1F;        // garante 0–31
-    kp->type = type & 0x0F;       // garante 0–15
+    kpckt->init_marker = INIT_MARKER;
+    kpckt->size = (num_data < DATA_SIZE) ? num_data : DATA_SIZE;
+    kpckt->seq = seq;
+    kpckt->type = type; 
 
     if (data && kpckt->size > 0)
         memcpy(kpckt->data, data, kpckt->size);

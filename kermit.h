@@ -43,13 +43,14 @@ typedef unsigned char byte_t;
 #define ERR_NO_SPACE        (0x1)
 
 // Estrutura do pacote Kermit baseado na nova definição
-typedef struct __attribute__((packed)) {
-    byte_t init_marker;   // 0x7E
-    byte_t size;          // 0–127
-    byte_t seq;           // 0–31
-    byte_t type;          // 0–15
-    byte_t checksum;
-    byte_t data[DATA_SIZE];
+typedef struct kermit_pckt_t
+{
+    byte_t init_marker;          // 8 bits: marcador de início (sempre 0x7E)
+    byte_t size : 7;             // 7 bits: tamanho do campo de dados
+    byte_t seq  : 5;             // 5 bits: número de sequência
+    byte_t type : 4;             // 4 bits: tipo da mensagem
+    byte_t checksum;             // 8 bits: paridade/checksum do pacote
+    byte_t data[DATA_SIZE];      // 0 a 127 bytes: dados (conteúdo)
 } kermit_pckt_t;
 
 /*!

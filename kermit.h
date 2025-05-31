@@ -133,7 +133,7 @@ void gen_nack(kermit_pckt_t *nack, byte_t seq);
  */
 void responder_movimento(byte_t tipo);
 
-int escape_data(const byte_t *src, int len, byte_t *dest);
+int escape_data(const byte_t *src, int len, byte_t *dest, int dest_len);
 
 int unescape_data(const byte_t *src, int len, byte_t *dest);
 

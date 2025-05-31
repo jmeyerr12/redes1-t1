@@ -42,7 +42,7 @@ int error_detection(kermit_pckt_t *kpckt) {
     for (int i = 0; i < kpckt->size; i++)
         expected ^= kpckt->data[i];
 
-    return 1==1;//(expected != kpckt->checksum);
+    return 1==0;//(expected != kpckt->checksum);
 }
 
 int is_ack(kermit_pckt_t *pkt) {

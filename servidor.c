@@ -82,7 +82,7 @@ void enviar_arquivo(const char *caminho, int seq) {
     kermit_pckt_t *resp = (kermit_pckt_t *)ack_buf;
 
     // 1. Nome
-    gen_kermit_pckt(&pkt, seq, tipo, nome, strlen(nome));
+    gen_kermit_pckt(&pkt, seq, tipo, nome, strlen(nome), 0);
     while (1) {
         sendto_rawsocket(socket_fd, &pkt, sizeof(pkt));
         int bytes = recvfrom_rawsocket(socket_fd, TIMEOUT_MS, ack_buf, BUF_SIZE);
@@ -94,7 +94,7 @@ void enviar_arquivo(const char *caminho, int seq) {
     seq++;
 
     // 2. Tamanho
-    gen_kermit_pckt(&pkt, seq, TAM_TYPE, &tamanho, sizeof(tamanho));
+    gen_kermit_pckt(&pkt, seq, TAM_TYPE, &tamanho, sizeof(tamanho), 0);
     while (1) {
         sendto_rawsocket(socket_fd, &pkt, sizeof(pkt));
         int bytes = recvfrom_rawsocket(socket_fd, TIMEOUT_MS, ack_buf, BUF_SIZE);
@@ -108,7 +108,7 @@ void enviar_arquivo(const char *caminho, int seq) {
     // 3. Dados
     size_t lidos;
     while ((lidos = fread(dados, 1, DATA_SIZE, fp)) > 0) {
-        gen_kermit_pckt(&pkt, seq, DATA_TYPE, dados, lidos);
+        gen_kermit_pckt(&pkt, seq, DATA_TYPE, dados, lidos, 1);
         while (1) {
             sendto_rawsocket(socket_fd, &pkt, sizeof(pkt));
             //printf("mando");
@@ -121,7 +121,7 @@ void enviar_arquivo(const char *caminho, int seq) {
         seq++;
     }
     // 4. Finalizador (sem ACK obrigatório)
-    gen_kermit_pckt(&pkt, seq++, END_FILE_TYPE, NULL, 0);
+    gen_kermit_pckt(&pkt, seq++, END_FILE_TYPE, NULL, 0, 0);
     sendto_rawsocket(socket_fd, &pkt, sizeof(pkt));
 
     fclose(fp);
@@ -141,7 +141,7 @@ int verificar_tesouro() {
 
 void responder_movimento(byte_t tipo) {
     kermit_pckt_t resposta;
-    gen_kermit_pckt(&resposta, 0, tipo, NULL, 0);
+    gen_kermit_pckt(&resposta, 0, tipo, NULL, 0, 0);
     sendto_rawsocket(socket_fd, &resposta, sizeof(resposta));
 }
 

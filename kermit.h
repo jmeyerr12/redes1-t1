@@ -56,14 +56,20 @@ typedef struct kermit_pckt_t
 /*!
  * @brief Gera um pacote Kermit
  *
- * @param kpckt Ponteiro para o pacote a ser preenchido
- * @param seq Número de sequência do pacote
- * @param type Tipo da mensagem
- * @param data Ponteiro para os dados a serem inseridos
- * @param num_data Número de bytes de dados
+ * @param kpckt    Ponteiro para o pacote a ser preenchido
+ * @param seq      Número de sequência do pacote (0-31)
+ * @param type     Tipo da mensagem (ACK, DATA_TYPE, etc.)
+ * @param data     Ponteiro para o bloco de dados a ser inserido
+ * @param num_data Quantidade de bytes em @p data
+ * @param esc      0 = insere @p data cru;  
+ *                 1 = aplica byte-stuffing (escapa 0x7E e 0x7D)
  */
-void gen_kermit_pckt(kermit_pckt_t *kpckt, int seq, int type,
-                     void *data, size_t num_data);
+void gen_kermit_pckt(kermit_pckt_t *kpckt,
+                     int seq,
+                     int type,
+                     const void *data,
+                     size_t num_data,
+                     int esc);
 
 /*!
  * @brief Imprime o conteúdo de um pacote
@@ -126,5 +132,9 @@ void gen_nack(kermit_pckt_t *nack, byte_t seq);
  * @param tipo Tipo de resposta: OKACK_TYPE (0x2), ACK_TYPE (0x0), NACK_TYPE (0x1)
  */
 void responder_movimento(byte_t tipo);
+
+int escape_data(const byte_t *src, int len, byte_t *dest);
+
+int unescape_data(const byte_t *src, int len, byte_t *dest);
 
 #endif

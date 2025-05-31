@@ -47,13 +47,39 @@ int recvfrom_rawsocket(int soquete, int timeoutMillis, char* buffer, int tamanho
     long long comeco = timestamp();
     struct timeval timeout = { .tv_sec = timeoutMillis / 1000, .tv_usec = (timeoutMillis % 1000) * 1000 };
     setsockopt(soquete, SOL_SOCKET, SO_RCVTIMEO, (char*) &timeout, sizeof(timeout));
+
     int bytes_lidos;
     do {
         bytes_lidos = recv(soquete, buffer, tamanho_buffer, 0);
         if (bytes_lidos == -1) continue; // timeout ou erro
-        if (valid_kermit_pckt((kermit_pckt_t *)buffer)) {
+
+        kermit_pckt_t *pkt = (kermit_pckt_t *)buffer;
+
+        if (valid_kermit_pckt(pkt)) {
             return bytes_lidos;
-        } else return -1;
+        } else {
+            printf("Pacote inválido:\n");
+            printf("  init_marker: 0x%02X\n", pkt->init_marker);
+            printf("  size: %u\n", pkt->size);
+            printf("  seq: %u\n", pkt->seq);
+            printf("  type: 0x%X\n", pkt->type);
+            printf("  checksum recebido: 0x%02X\n", pkt->checksum);
+
+            // Calculando checksum esperado manualmente
+            byte_t checksum_esperado = pkt->size ^ pkt->seq ^ pkt->type;
+            for (int i = 0; i < pkt->size; i++)
+                checksum_esperado ^= pkt->data[i];
+
+            printf("  checksum esperado: 0x%02X\n", checksum_esperado);
+            printf("  dados (hex):");
+            for (int i = 0; i < pkt->size; i++) {
+                printf(" %02X", pkt->data[i]);
+            }
+            printf("\n");
+
+            return -1;
+        }
     } while (timestamp() - comeco <= timeoutMillis);
+
     return -1;
 }

@@ -36,11 +36,12 @@ void enviar_movimento(char comando) {
         default: printf("Comando inválido!\n"); return;
     }
 
-    gen_kermit_pckt(&pkt, seq++, tipo, NULL, 0);
+    gen_kermit_pckt(&pkt, seq++, tipo, NULL, 0, 0);
     sendto_rawsocket(socket_fd, &pkt, sizeof(pkt));
 }
 
-void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho) {
+void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho)
+{
     FILE *fp = fopen(nome_arquivo, "wb");
     if (!fp) {
         perror("Erro ao criar arquivo");
@@ -48,47 +49,62 @@ void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho) {
     }
 
     int total_bytes = 0;
-    int ultima_seq = -1; 
+    int ultima_seq  = -1;
+
     printf("Recebendo arquivo: %s (%d bytes)\n", nome_arquivo, tamanho);
-    //int cont = 0;
+
     while (1) {
         char buffer[BUF_SIZE];
         kermit_pckt_t *pkt = (kermit_pckt_t *)buffer;
 
         int bytes = recvfrom_rawsocket(socket_fd, TIMEOUT_MS, buffer, BUF_SIZE);
-        if (bytes == -1) {
-            responder_ack(NACK_TYPE, pkt->seq); //recvfrom_rawsocket ja valida se o pacote veio valido e retorna -1 se tiver algo errado
+        if (bytes == -1) {                           /* pacote inválido/timeout  */
+            responder_ack(NACK_TYPE, pkt->seq);
             continue;
         }
+
+        /* ---------------- blocos de dados ---------------- */
         if (pkt->type == DATA_TYPE) {
-            if (pkt->seq == ultima_seq) {
-                responder_ack(OKACK_TYPE, pkt->seq); // reenviar ACK para o mesmo pacote
-                continue; // ignora gravação duplicada
+
+            if (pkt->seq == ultima_seq) {            /* duplicata                */
+                responder_ack(OKACK_TYPE, pkt->seq);
+                continue;
             }
 
+            /* desscapa antes de gravar */
+            byte_t real[DATA_SIZE];
+            int real_len = unescape_data(pkt->data, pkt->size, real);
+
             responder_ack(OKACK_TYPE, pkt->seq);
-            //printf("Gravando %d bytes (seq %d)\n", pkt->size, pkt->seq);
-            fwrite(pkt->data, 1, pkt->size, fp);
-            total_bytes += pkt->size;
+
+            fwrite(real, 1, real_len, fp);          /* grava apenas dados reais */
+            total_bytes += real_len;
             ultima_seq = pkt->seq;
-        } else if (pkt->type == END_FILE_TYPE) {
+        }
+
+        /* ---------------- finalizador -------------------- */
+        else if (pkt->type == END_FILE_TYPE) {
             responder_ack(OKACK_TYPE, pkt->seq);
             fclose(fp);
-            printf("\nArquivo '%s' salvo com sucesso (%d bytes).\n", nome_arquivo, total_bytes);
+            printf("\nArquivo '%s' salvo com sucesso (%d bytes).\n",
+                   nome_arquivo, total_bytes);
 
-            char comando[128];
-            snprintf(comando, sizeof(comando), "xdg-open \"%s\" &", nome_arquivo);
-            system(comando);
+            char cmd[128];
+            snprintf(cmd, sizeof(cmd), "xdg-open \"%s\" &", nome_arquivo);
+            system(cmd);
             return;
-        } else {
-            print_kermit_pckt(pkt);
+        }
+
+        /* ---------------- outros tipos ------------------- */
+        else {
+            print_kermit_pckt(pkt);                  /* debug opcional            */
         }
     }
 }
 
 void responder_ack(byte_t tipo, byte_t seq) {
     kermit_pckt_t ack;
-    gen_kermit_pckt(&ack, seq, tipo, NULL, 0);
+    gen_kermit_pckt(&ack, seq, tipo, NULL, 0, 0);
     sendto_rawsocket(socket_fd, &ack, sizeof(ack));
 }
 
@@ -168,7 +184,7 @@ int verificar_resposta() {
 
 void enviar_ping(int sig) {
     kermit_pckt_t ping;
-    gen_kermit_pckt(&ping, 0, IDLE_TYPE, NULL, 0);
+    gen_kermit_pckt(&ping, 0, IDLE_TYPE, NULL, 0, 0);
     sendto_rawsocket(socket_fd, &ping, sizeof(ping));
     alarm(4); // agenda próximo ping
 }

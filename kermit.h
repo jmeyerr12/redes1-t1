@@ -4,7 +4,7 @@
 #include "raw_socket.h"
 
 #define BUF_SIZE (1024 + 1)  // Buffer auxiliar
-#define DATA_SIZE (127)      // Tamanho máximo do campo de dados
+#define DATA_SIZE (60)      // Tamanho máximo do campo de dados
 
 #define TIMEOUT_MS (50)
 #define TIMEOUT_PROB (980)  // Probabilidade de timeout (para simulações)
@@ -133,7 +133,7 @@ void gen_nack(kermit_pckt_t *nack, byte_t seq);
  */
 void responder_movimento(byte_t tipo);
 
-int escape_data(const byte_t *src, int len, byte_t *dest, int dest_len);
+int escape_data(const byte_t *src, int len, byte_t *dest);
 
 int unescape_data(const byte_t *src, int len, byte_t *dest);
 

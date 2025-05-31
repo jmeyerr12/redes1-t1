@@ -16,27 +16,21 @@
  *
  * Retorna: quantidade de bytes gerados no buffer dest
  * ----------------------------------------------------------------- */
-/* dest_len = capacidade do campo data (ex.: 127) */
-int escape_data(const byte_t *src, int len,
-                byte_t *dest, int dest_len)
+int escape_data(const byte_t *src, int len, byte_t *dest)
 {
     int j = 0;
 
     for (int i = 0; i < len; i++) {
-
-        /* byte precisará de 2 posições? */
         if (src[i] == MARKER_BYTE || src[i] == ESCAPE_BYTE) {
-            if (j + 2 > dest_len) break;          /* não cabe o par */
+            /* insere byte de escape e o byte alterado             */
             dest[j++] = ESCAPE_BYTE;
             dest[j++] = src[i] ^ ESCAPE_MASK;
         } else {
-            if (j + 1 > dest_len) break;          /* não cabe mais nada */
             dest[j++] = src[i];
         }
     }
-    return j;                                     /* bytes realmente copiados */
+    return j;     /* tamanho do bloco escapado */
 }
-
 
 /* ------------------------------------------------------------------
  * Desscapa dados binários
@@ -69,29 +63,26 @@ void gen_kermit_pckt(kermit_pckt_t *kp, int seq, int type,
     const byte_t *src = (const byte_t *)data;
 
     int plen = 0;
-
     if (esc && data && len)
-        /* escape_data agora recebe a capacidade máxima (DATA_SIZE)   */
-        plen = escape_data(src, len, tmp, DATA_SIZE);
+        plen = escape_data(src, len, tmp);          /* faz stuffing       */
     else if (data && len)
-        plen = (int)len;                       /* bloco cru            */
+        plen = (int)len;                            /* copia cru          */
 
     memset(kp, 0, sizeof(*kp));
     kp->init_marker = INIT_MARKER;
-    kp->size = plen;                           /* já cabe em 0-127     */
+    kp->size = (plen < DATA_SIZE) ? plen : DATA_SIZE;
     kp->seq  = seq;
     kp->type = type;
 
     if (plen)
-        memcpy(kp->data, esc ? tmp : src, plen);
+        memcpy(kp->data, esc ? tmp : src, kp->size);
 
-    /* checksum calculado sobre o que será realmente transmitido      */
+    /* checksum calculado sobre os bytes já escapados (se houver) */
     byte_t cs = kp->size ^ kp->seq ^ kp->type;
     for (int i = 0; i < kp->size; i++)
         cs ^= kp->data[i];
     kp->checksum = cs;
 }
-
 
 void print_kermit_pckt(kermit_pckt_t *kpckt) {
     printf("Packet:\n");

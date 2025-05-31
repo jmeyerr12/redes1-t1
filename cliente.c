@@ -57,13 +57,10 @@ void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho) {
 
         int bytes = recvfrom_rawsocket(socket_fd, TIMEOUT_MS, buffer, BUF_SIZE);
         if (bytes == -1) {
-            printf("abacaxi");
             responder_ack(NACK_TYPE, pkt->seq); //recvfrom_rawsocket ja valida se o pacote veio valido e retorna -1 se tiver algo errado
             continue;
         }
         if (pkt->type == DATA_TYPE) {
-            if (!valid_kermit_pckt(pkt)) {printf("xabu"); continue;}
-
             if (pkt->seq == ultima_seq) {
                 responder_ack(OKACK_TYPE, pkt->seq); // reenviar ACK para o mesmo pacote
                 continue; // ignora gravação duplicada

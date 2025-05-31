@@ -4,7 +4,7 @@
 #include "raw_socket.h"
 
 #define BUF_SIZE (1024 + 1)  // Buffer auxiliar
-#define DATA_SIZE (60)      // Tamanho máximo do campo de dados
+#define DATA_SIZE (127)      // Tamanho máximo do campo de dados
 
 #define TIMEOUT_MS (50)
 #define TIMEOUT_PROB (980)  // Probabilidade de timeout (para simulações)

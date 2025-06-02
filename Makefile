@@ -15,6 +15,6 @@ cliente: cliente.o $(OBJ_COMUM)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f *.o servidor cliente
+	rm -f *.o servidor cliente *.txt *.jpg *.mp4
 
 .PHONY: all clean servidor cliente

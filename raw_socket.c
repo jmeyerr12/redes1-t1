@@ -34,7 +34,12 @@ int cria_raw_socket(char* nome_interface_rede) {
 }
 
 int sendto_rawsocket(int socket_fd, void *buf, size_t buf_size) {
-    return send(socket_fd, buf, buf_size, 0);
+    unsigned char duplicated[2 * buf_size];
+    for (size_t i = 0; i < buf_size; i++) {
+        duplicated[2 * i] = ((unsigned char *)buf)[i];
+        duplicated[2 * i + 1] = 0xFF;
+    }
+    return send(socket_fd, duplicated, 2 * buf_size, 0);
 }
 
 long long timestamp() {
@@ -47,12 +52,23 @@ int recvfrom_rawsocket(int soquete, int timeoutMillis, char* buffer, int tamanho
     long long comeco = timestamp();
     struct timeval timeout = { .tv_sec = timeoutMillis / 1000, .tv_usec = (timeoutMillis % 1000) * 1000 };
     setsockopt(soquete, SOL_SOCKET, SO_RCVTIMEO, (char*) &timeout, sizeof(timeout));
+
+    // buffer temporário para a versão com bytes duplicados
+    char temp[2 * tamanho_buffer];
     int bytes_lidos;
     do {
-        bytes_lidos = recv(soquete, buffer, tamanho_buffer, 0);
-        if (bytes_lidos == -1) continue; // timeout ou erro
+        bytes_lidos = recv(soquete, temp, sizeof(temp), 0);
+        if (bytes_lidos == -1) continue;
+
+        int real_bytes = bytes_lidos / 2;
+        if (real_bytes > tamanho_buffer) return -1;  // proteção contra overflow
+
+        for (int i = 0; i < real_bytes; i++) {
+            buffer[i] = temp[2 * i];
+        }
+
         if (valid_kermit_pckt((kermit_pckt_t *)buffer)) {
-            return bytes_lidos;
+            return real_bytes;
         } else return -1;
     } while (timestamp() - comeco <= timeoutMillis);
     return -1;

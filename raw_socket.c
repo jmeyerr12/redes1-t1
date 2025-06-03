@@ -53,23 +53,24 @@ int recvfrom_rawsocket(int soquete, int timeoutMillis, char* buffer, int tamanho
     struct timeval timeout = { .tv_sec = timeoutMillis / 1000, .tv_usec = (timeoutMillis % 1000) * 1000 };
     setsockopt(soquete, SOL_SOCKET, SO_RCVTIMEO, (char*) &timeout, sizeof(timeout));
 
-    // buffer temporário para a versão com bytes duplicados
-    char temp[2 * tamanho_buffer];
+    // lê no máximo 2048 bytes
+    unsigned char temp[2048];
     int bytes_lidos;
     do {
         bytes_lidos = recv(soquete, temp, sizeof(temp), 0);
-        if (bytes_lidos == -1) continue;
+        if (bytes_lidos <= 0) continue;
 
-        int real_bytes = bytes_lidos / 2;
-        if (real_bytes > tamanho_buffer) return -1;  // proteção contra overflow
-
-        for (int i = 0; i < real_bytes; i++) {
-            buffer[i] = temp[2 * i];
+        // vamos extrair os dados intercalados (ignorar 0xFF)
+        int real_i = 0;
+        for (int i = 0; i + 1 < bytes_lidos && real_i < tamanho_buffer; i += 2) {
+            buffer[real_i++] = temp[i];
         }
 
-        if (valid_kermit_pckt((kermit_pckt_t *)buffer)) {
-            return real_bytes;
-        } else return -1;
+        // somente testa pacote se há conteúdo suficiente
+        if (real_i > 0 && valid_kermit_pckt((kermit_pckt_t *)buffer)) {
+            return real_i;
+        }
+
     } while (timestamp() - comeco <= timeoutMillis);
     return -1;
 }

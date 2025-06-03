@@ -34,12 +34,7 @@ int cria_raw_socket(char* nome_interface_rede) {
 }
 
 int sendto_rawsocket(int socket_fd, void *buf, size_t buf_size) {
-    unsigned char duplicated[2 * buf_size];
-    for (size_t i = 0; i < buf_size; i++) {
-        duplicated[2 * i] = ((unsigned char *)buf)[i];
-        duplicated[2 * i + 1] = 0xFF;
-    }
-    return send(socket_fd, duplicated, 2 * buf_size, 0);
+    return send(socket_fd, buf, buf_size, 0);
 }
 
 long long timestamp() {
@@ -52,25 +47,13 @@ int recvfrom_rawsocket(int soquete, int timeoutMillis, char* buffer, int tamanho
     long long comeco = timestamp();
     struct timeval timeout = { .tv_sec = timeoutMillis / 1000, .tv_usec = (timeoutMillis % 1000) * 1000 };
     setsockopt(soquete, SOL_SOCKET, SO_RCVTIMEO, (char*) &timeout, sizeof(timeout));
-
-    // lê no máximo 2048 bytes
-    unsigned char temp[2048];
     int bytes_lidos;
     do {
-        bytes_lidos = recv(soquete, temp, sizeof(temp), 0);
-        if (bytes_lidos <= 0) continue;
-
-        // vamos extrair os dados intercalados (ignorar 0xFF)
-        int real_i = 0;
-        for (int i = 0; i + 1 < bytes_lidos && real_i < tamanho_buffer; i += 2) {
-            buffer[real_i++] = temp[i];
-        }
-
-        // somente testa pacote se há conteúdo suficiente
-        if (real_i > 0 && valid_kermit_pckt((kermit_pckt_t *)buffer)) {
-            return real_i;
-        }
-
+        bytes_lidos = recv(soquete, buffer, tamanho_buffer, 0);
+        if (bytes_lidos == -1) continue; // timeout ou erro
+        if (valid_kermit_pckt((kermit_pckt_t *)buffer)) {
+            return bytes_lidos;
+        } else return -1;
     } while (timestamp() - comeco <= timeoutMillis);
     return -1;
 }

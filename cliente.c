@@ -80,8 +80,6 @@ void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho) {
             snprintf(comando, sizeof(comando), "xdg-open \"%s\" &", nome_arquivo);
             system(comando);
             return;
-        } else {
-            print_kermit_pckt(pkt);
         }
     }
 }

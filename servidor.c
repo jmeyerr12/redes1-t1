@@ -54,6 +54,40 @@ void print_tesouros() {
     }
 }
 
+int esperar_ack(kermit_pckt_t *pkt) {
+    char ack_buf[BUF_SIZE];
+    kermit_pckt_t *resp = (kermit_pckt_t *)ack_buf;
+
+    long inicio = timestamp();
+    int quedas = 0;
+
+    while (timestamp() - inicio < 500) {
+        sendto_rawsocket(socket_fd, pkt, sizeof(*pkt));
+
+        int bytes = recvfrom_rawsocket(socket_fd, 50, ack_buf, BUF_SIZE);
+
+        if (bytes <= 0) {
+            if (++quedas > 100) {
+                puts("[CLIENTE] link ausente; reiniciando socket…");
+                close(socket_fd);
+                socket_fd = cria_raw_socket("enx00e04c534458");
+                quedas = 0;
+            }
+            continue;
+        }
+
+        quedas = 0;
+
+        if (!valid_kermit_pckt(resp)) continue;
+        if (resp->seq != pkt->seq) continue;
+
+        if (resp->type == OKACK_TYPE) return 1;
+        if (resp->type == NACK_TYPE) continue;
+    }
+
+    return 0; // timeout total estourado
+}
+
 void enviar_arquivo(const char *caminho, int seq) {
     FILE *fp = fopen(caminho, "rb");
     if (!fp) {
@@ -81,45 +115,35 @@ void enviar_arquivo(const char *caminho, int seq) {
     char ack_buf[BUF_SIZE];
     kermit_pckt_t *resp = (kermit_pckt_t *)ack_buf;
 
-    // 1. Nome
-    gen_kermit_pckt(&pkt, seq, tipo, nome, strlen(nome));
-    while (1) {
-        sendto_rawsocket(socket_fd, &pkt, sizeof(pkt));
-        int bytes = recvfrom_rawsocket(socket_fd, TIMEOUT_MS, ack_buf, BUF_SIZE);
-        if (bytes > 0 && valid_kermit_pckt(resp) && resp->seq == pkt.seq) { //resp é ack buf com casting pra tipo do pacote kermit
-            if (resp->type == OKACK_TYPE) break;
-            if (resp->type == NACK_TYPE) continue; // reenviar
-        }
-    }
+    int status;
+
+    // Nome
+    do {
+        gen_kermit_pckt(&pkt, seq, tipo, nome, strlen(nome));
+        status = esperar_ack(&pkt); // 1 = OKACK, 0 = timeout/NACK
+        if (status == 0) printf("Reenviando nome do arquivo…\n");
+    } while (status == 0);
     seq++;
 
-    // 2. Tamanho
-    gen_kermit_pckt(&pkt, seq, TAM_TYPE, &tamanho, sizeof(tamanho));
-    while (1) {
-        sendto_rawsocket(socket_fd, &pkt, sizeof(pkt));
-        int bytes = recvfrom_rawsocket(socket_fd, TIMEOUT_MS, ack_buf, BUF_SIZE);
-        if (bytes > 0 && valid_kermit_pckt(resp) && resp->seq == pkt.seq) {
-            if (resp->type == OKACK_TYPE) break;
-            if (resp->type == NACK_TYPE) continue;
-        }
-    }
+    // Tamanho
+    do {
+        gen_kermit_pckt(&pkt, seq, TAM_TYPE, &tamanho, sizeof(tamanho));
+        status = esperar_ack(&pkt);
+        if (status == 0) printf("Reenviando tamanho do arquivo…\n");
+    } while (status == 0);
     seq++;
 
-    // 3. Dados
+    // Dados
     size_t lidos;
     while ((lidos = fread(dados, 1, DATA_SIZE, fp)) > 0) {
-        gen_kermit_pckt(&pkt, seq, DATA_TYPE, dados, lidos);
-        while (1) {
-            sendto_rawsocket(socket_fd, &pkt, sizeof(pkt));
-            //printf("mando");
-            int bytes = recvfrom_rawsocket(socket_fd, TIMEOUT_MS, ack_buf, BUF_SIZE);
-            if (bytes > 0 && valid_kermit_pckt(resp) && resp->seq == pkt.seq) {
-                if (resp->type == OKACK_TYPE) break;
-                if (resp->type == NACK_TYPE) {/* printf("reenviando\n"); */continue;}
-            }
-        }
+        do {
+            gen_kermit_pckt(&pkt, seq, DATA_TYPE, dados, lidos);
+            status = esperar_ack(&pkt);
+            if (status == 0) printf("Reenviando bloco de dados (seq = %d)…\n", seq);
+        } while (status == 0);
         seq++;
     }
+
     // 4. Finalizador (sem ACK obrigatório)
     gen_kermit_pckt(&pkt, seq++, END_FILE_TYPE, NULL, 0);
     sendto_rawsocket(socket_fd, &pkt, sizeof(pkt));

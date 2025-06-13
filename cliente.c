@@ -66,7 +66,8 @@ void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho) {
                 responder_ack(OKACK_TYPE, pkt->seq); // reenviar ACK para o mesmo pacote
                 continue; // ignora gravação duplicada
             }
-
+            printf("\033[1A"); // código ANSI: cursor uma linha acima
+            printf("%d%%", total_bytes/tamanho);
             responder_ack(OKACK_TYPE, pkt->seq);
             //printf("Gravando %d bytes (seq %d)\n", pkt->size, pkt->seq);
             fwrite(pkt->data, 1, pkt->size, fp);

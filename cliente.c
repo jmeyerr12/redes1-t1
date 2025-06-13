@@ -8,6 +8,7 @@ static int quedas = 0;
 char *interface;
 
 void desenhar_mapa(Posicao jogador) {
+    system("cls");
     printf("\n==== MAPA ====\n");
     for (int y = GRID_SIZE - 1; y >= 0; y--) {
         for (int x = 0; x < GRID_SIZE; x++) {

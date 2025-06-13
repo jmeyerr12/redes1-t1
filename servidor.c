@@ -112,8 +112,6 @@ void enviar_arquivo(const char *caminho, int seq) {
 
     byte_t dados[DATA_SIZE];
     kermit_pckt_t pkt;
-    char ack_buf[BUF_SIZE];
-    kermit_pckt_t *resp = (kermit_pckt_t *)ack_buf;
 
     int status;
 

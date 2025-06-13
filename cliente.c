@@ -67,8 +67,8 @@ void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho) {
                 continue; // ignora gravação duplicada
             }
             system("clear");
+            printf("%d%%", (total_bytes*100)/tamanho);
             desenhar_mapa(posicao_jogador);
-            printf("%d%%", (total_bytes/tamanho)*100);
             responder_ack(OKACK_TYPE, pkt->seq);
             //printf("Gravando %d bytes (seq %d)\n", pkt->size, pkt->seq);
             fwrite(pkt->data, 1, pkt->size, fp);

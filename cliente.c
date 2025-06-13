@@ -75,7 +75,7 @@ void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho) {
                 system("clear");
                 fflush(stdout);
                 printf("Recebendo tesouro: %d%%\n", percent);
-                desenhar_mapa(posicao_jogador);
+                fflush(stdout);
             }
             prev_percent = percent;
 

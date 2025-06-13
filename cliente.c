@@ -49,6 +49,8 @@ void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho) {
     }
 
     int total_bytes = 0;
+    int percent = 0;
+    int prev_percent = 0;
     int ultima_seq = -1; 
     printf("Recebendo arquivo: %s (%d bytes)\n", nome_arquivo, tamanho);
     //int cont = 0;
@@ -66,9 +68,15 @@ void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho) {
                 responder_ack(OKACK_TYPE, pkt->seq); // reenviar ACK para o mesmo pacote
                 continue; // ignora gravação duplicada
             }
-            system("clear");
-            printf("%d%%", (total_bytes*100)/tamanho);
-            desenhar_mapa(posicao_jogador);
+            
+            percent = (total_bytes*100)/tamanho;
+            if (percent != prev_percent) {
+                system("clear");
+                printf("%d%%", percent);
+                desenhar_mapa(posicao_jogador);
+            }
+            prev_percent = percent;
+
             responder_ack(OKACK_TYPE, pkt->seq);
             //printf("Gravando %d bytes (seq %d)\n", pkt->size, pkt->seq);
             fwrite(pkt->data, 1, pkt->size, fp);

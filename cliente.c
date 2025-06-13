@@ -215,7 +215,7 @@ int main(int argc, char *argv[]) {
             } else printf("Comando inválido: %c\n", cmd); 
         } while (status == -1);
 
-        mapa[posicao_jogador.y][posicao_jogador] = 2;
+        mapa[posicao_jogador.y][posicao_jogador.x] = 2;
         if (status == 1 || status == 2) {
             if (cmd == 'w' && posicao_jogador.y < GRID_SIZE - 1) posicao_jogador.y++;
             if (cmd == 's' && posicao_jogador.y > 0)             posicao_jogador.y--;

@@ -23,6 +23,7 @@ void desenhar_mapa(Posicao jogador) {
         printf("\n");
     }
     printf("================\n\n");
+    printf("Posição atual: (%d, %d) > ", posicao_jogador.x, posicao_jogador.y);
 }
 
 void enviar_movimento(char comando) {
@@ -197,7 +198,6 @@ int main(int argc, char *argv[]) {
 
     while (1) {
         desenhar_mapa(posicao_jogador);
-        printf("Posição atual: (%d, %d) > ", posicao_jogador.x, posicao_jogador.y);
 
         char cmd = getchar();
         while (getchar() != '\n');

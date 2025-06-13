@@ -3,7 +3,7 @@
 int socket_fd;
 int seq = 0;
 Posicao posicao_jogador = {0, 0};
-int mapa[GRID_SIZE][GRID_SIZE] = {0}; // 0 = vazio, 1 = tesouro encontrado
+int mapa[GRID_SIZE][GRID_SIZE] = {0}; // 0 = vazio, 1 = tesouro encontrado 2 = visitado
 static int quedas = 0;
 char *interface;
 
@@ -16,6 +16,8 @@ void desenhar_mapa(Posicao jogador) {
                 printf(" P ");
             } else if (mapa[y][x] == 1) {
                 printf(" X ");
+            } else if (mapa[y][x] == 2) {
+                printf(" - ");
             } else {
                 printf(" . ");
             }
@@ -213,6 +215,7 @@ int main(int argc, char *argv[]) {
             } else printf("Comando inválido: %c\n", cmd); 
         } while (status == -1);
 
+        mapa[posicao_jogador.y][posicao_jogador] = 2;
         if (status == 1 || status == 2) {
             if (cmd == 'w' && posicao_jogador.y < GRID_SIZE - 1) posicao_jogador.y++;
             if (cmd == 's' && posicao_jogador.y > 0)             posicao_jogador.y--;

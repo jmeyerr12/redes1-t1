@@ -73,7 +73,7 @@ void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho) {
             percent = (total_bytes*100)/tamanho;
             if (percent != prev_percent) {
                 system("clear");
-                printf("%d%%", percent);
+                printf("%d%%\n", percent);
                 desenhar_mapa(posicao_jogador);
             }
             prev_percent = percent;

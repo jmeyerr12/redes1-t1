@@ -105,6 +105,18 @@ void responder_ack(byte_t tipo, byte_t seq) {
     sendto_rawsocket(socket_fd, &ack, sizeof(ack));
 }
 
+int arquivo_cabe(const char *caminho, int tamanho_arquivo) {
+    struct statvfs stat;
+    if (statvfs(caminho, &stat) != 0) {
+        return 0; // erro ao obter info
+    }
+
+    unsigned long long espaco_livre = stat.f_bsize * stat.f_bavail;
+
+    return espaco_livre >= (unsigned long long)tamanho_arquivo;
+}
+
+
 int verificar_resposta() {
     char  buffer[BUF_SIZE];
     kermit_pckt_t *pkt = (kermit_pckt_t *)buffer;
@@ -161,7 +173,8 @@ int verificar_resposta() {
                 if (aguardando_arquivo && nome_arquivo[0]) {
                     memcpy(&tamanho_arquivo, pkt->data, sizeof(int));
                     responder_ack(OKACK_TYPE, pkt->seq);  /* ACK do tamanho */
-                    receber_arquivo(tipo_arquivo, nome_arquivo, tamanho_arquivo);
+                    if (arquivo_cabe(".", tamanho_arquivo)) receber_arquivo(tipo_arquivo, nome_arquivo, tamanho_arquivo);
+                    //else mandar erro
                     /* limpa estado */
                     aguardando_arquivo = 0;
                     nome_arquivo[0] = '\0';

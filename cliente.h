@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <signal.h> //usada para o ping
+#include <sys/statvfs.h> //pra ver se o arquivo cabe
 
 #include "raw_socket.h"
 #include "kermit.h"
@@ -53,6 +54,23 @@ void desenhar_mapa(Posicao jogador);
  */
 int verificar_resposta();
 
+/*!
+ * @brief Envia uma resposta ACK (confirmação) de volta ao servidor.
+ *
+ * @param tipo Tipo do ACK a ser enviado (por exemplo, OKACK_TYPE ou ERRACK_TYPE).
+ * @param seq Número de sequência do pacote ao qual o ACK se refere.
+ */
 void responder_ack(byte_t tipo, byte_t seq);
+
+/*!
+ * @brief Verifica se há espaço suficiente no diretório especificado para armazenar um arquivo.
+ *
+ * @param caminho Caminho do diretório onde o arquivo será salvo (ex: "." para o diretório atual).
+ * @param tamanho_arquivo Tamanho do arquivo em bytes.
+ * 
+ * @return 1 se houver espaço suficiente, 0 caso contrário.
+ */
+int arquivo_cabe(const char *caminho, int tamanho_arquivo);
+
 
 #endif

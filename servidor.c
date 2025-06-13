@@ -89,8 +89,15 @@ int esperar_ack(kermit_pckt_t *pkt) {
 }
 
 void enviar_arquivo(const char *caminho, int seq) {
+    if (access(caminho, R_OK) != 0) {
+        //mandar erro pro cliente
+        perror("Sem permissão para ler o tesouro");
+        return;
+    }
+    
     FILE *fp = fopen(caminho, "rb");
     if (!fp) {
+        //mandar erro pro cliente
         perror("Erro ao abrir tesouro");
         return;
     }

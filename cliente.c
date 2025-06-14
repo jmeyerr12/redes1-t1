@@ -28,6 +28,40 @@ void desenhar_mapa(Posicao jogador) {
     printf("Posição atual: (%d, %d) > ", posicao_jogador.x, posicao_jogador.y);
 }
 
+int esperar_ack(kermit_pckt_t *pkt) {
+    char ack_buf[BUF_SIZE];
+    kermit_pckt_t *resp = (kermit_pckt_t *)ack_buf;
+
+    long inicio = timestamp();
+    int quedas = 0;
+
+    while (timestamp() - inicio < 500) {
+        sendto_rawsocket(socket_fd, pkt, sizeof(*pkt));
+
+        int bytes = recvfrom_rawsocket(socket_fd, 50, ack_buf, BUF_SIZE);
+
+        if (bytes <= 0) {
+            if (++quedas > 100) {
+                puts("[CLIENTE] link ausente; reiniciando socket…");
+                close(socket_fd);
+                socket_fd = cria_raw_socket("enx00e04c534458");
+                quedas = 0;
+            }
+            continue;
+        }
+
+        quedas = 0;
+
+        if (!valid_kermit_pckt(resp)) continue;
+        if (resp->seq != pkt->seq) continue;
+
+        if (resp->type == OKACK_TYPE || resp->type == ACK_TYPE) return 1;
+        if (resp->type == NACK_TYPE) continue;
+    }
+
+    return 0; // timeout total estourado
+}
+
 void enviar_movimento(char comando) {
     kermit_pckt_t pkt;
     byte_t tipo;
@@ -174,15 +208,34 @@ int verificar_resposta() {
                     memcpy(&tamanho_arquivo, pkt->data, sizeof(int));
                     responder_ack(OKACK_TYPE, pkt->seq);  /* ACK do tamanho */
                     if (arquivo_cabe(".", tamanho_arquivo)) receber_arquivo(tipo_arquivo, nome_arquivo, tamanho_arquivo);
-                    //else mandar erro
+                    else {
+                        int enviou_erro = 0;
+                        // envia pacote de erro - erro de tamanho
+                        do {
+                            byte_t erro = ERR_NO_SPACE;
+                            kermit_pckt_t error_pkt;
+                            gen_kermit_pckt(&error_pkt, seq++, ERROR_TYPE, &erro, 1);
+                            enviou_erro = esperar_ack(&error_pkt);
+                        } while (enviou_erro == 0);
+                        printf("ERRO: Arquivo grande demais.");
+                        return 0;
+                    }
                     /* limpa estado */
                     aguardando_arquivo = 0;
                     nome_arquivo[0] = '\0';
                     tipo_arquivo   = -1;
                     tamanho_arquivo= -1;
-                    return 2;     
+                    return 2;
                 }
                 break;
+
+            case ERROR_TYPE:
+                if (pkt->data[0] == (byte_t)ERR_NO_PERMISSION)
+                    printf("ERRO: Servidor não teve permissão para acessar um dos arquivos.");
+                else
+                    printf("ERRO: Servidor falhou ao abrir um dos arquivos na hora do envio.");
+                responder_ack(ACK_TYPE, pkt->seq);  
+                return 0;
 
             default:
                 break;

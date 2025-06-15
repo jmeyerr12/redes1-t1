@@ -41,6 +41,8 @@ typedef unsigned char byte_t;
 // Códigos de erro
 #define ERR_NO_PERMISSION   (0x0)
 #define ERR_NO_SPACE        (0x1)
+#define ERR_COULD_NOT_OPEN  (0x2)
+#define ERR_DOESNT_EXIST    (0x3)
 
 // Estrutura do pacote Kermit baseado na nova definição
 typedef struct kermit_pckt_t

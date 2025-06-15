@@ -6,6 +6,28 @@ int socket_fd;
 char buffer[BUF_SIZE];
 static int quedas = 0;
 
+bool arquivo_existe(const char *caminho) {
+    struct stat st;
+    return (stat(caminho, &st) == 0);
+}
+
+bool tem_permissao_arquivo(const char *caminho) {
+	struct stat st;
+	if (stat(caminho, &st) != 0)
+		return false;
+
+	uid_t uid = getuid(); // uid real
+	gid_t gid = getgid(); // gid real
+
+	if (uid == st.st_uid)
+		return (st.st_mode & S_IRUSR);
+
+	if (gid == st.st_gid)
+		return (st.st_mode & S_IRGRP);
+
+	return (st.st_mode & S_IROTH);
+}
+
 void carregar_tesouros() {
     srand(time(NULL));
 
@@ -81,7 +103,7 @@ int esperar_ack(kermit_pckt_t *pkt) {
         if (!valid_kermit_pckt(resp)) continue;
         if (resp->seq != pkt->seq) continue;
 
-        if (resp->type == OKACK_TYPE) return 1;
+        if (resp->type == OKACK_TYPE || resp->type == ACK_TYPE) return 1;
         if (resp->type == NACK_TYPE) continue;
     }
 
@@ -89,16 +111,43 @@ int esperar_ack(kermit_pckt_t *pkt) {
 }
 
 void enviar_arquivo(const char *caminho, int seq) {
-    if (access(caminho, R_OK) != 0) {
+    if (!arquivo_existe(caminho)) {
+        int enviou_erro = 0;
         //mandar erro pro cliente
-        perror("Sem permissão para ler o tesouro");
+        do {
+            byte_t erro = ERR_DOESNT_EXIST;
+            kermit_pckt_t error_pkt;
+            gen_kermit_pckt(&error_pkt, seq++, ERROR_TYPE, &erro, 1);
+            enviou_erro = esperar_ack(&error_pkt);
+        } while (enviou_erro == 0);
+        perror("ERRO: Arquivo especificado não existe");
+        return;
+    }
+
+    if (!tem_permissao_arquivo(caminho)) {
+        int enviou_erro = 0;
+        //mandar erro pro cliente
+        do {
+            byte_t erro = ERR_NO_PERMISSION;
+            kermit_pckt_t error_pkt;
+            gen_kermit_pckt(&error_pkt, seq++, ERROR_TYPE, &erro, 1);
+            enviou_erro = esperar_ack(&error_pkt);
+        } while (enviou_erro == 0);
+        perror("ERRO: Sem permissão para ler o tesouro");
         return;
     }
     
     FILE *fp = fopen(caminho, "rb");
     if (!fp) {
+        int enviou_erro = 0;
         //mandar erro pro cliente
-        perror("Erro ao abrir tesouro");
+        do {
+            byte_t erro = ERR_COULD_NOT_OPEN;
+            kermit_pckt_t error_pkt;
+            gen_kermit_pckt(&error_pkt, seq++, ERROR_TYPE, &erro, 1);
+            enviou_erro = esperar_ack(&error_pkt);
+        } while (enviou_erro == 0);
+        perror("ERRO: Não foi possível abrir o tesouro");
         return;
     }
 
@@ -234,11 +283,15 @@ int main(int argc, char *argv[]) {
         kermit_pckt_t *pkt = (kermit_pckt_t *)buffer;
         if (!valid_kermit_pckt(pkt)) {
             printf("Pacote inválido recebido\n");
+            responder_movimento(NACK_TYPE);
             continue;
         }
 
         if (pkt->type >= MOVER_DIR && pkt->type <= MOVER_ESQ) processar_movimento(pkt->type); //aqui ja manda nack
-        //else if (pkt->type == ERROR_TYPE) responder_movimento(NACK_TYPE);
+        else if (pkt->type == ERROR_TYPE){
+            printf("ERRO: Cliente não conseguiu receber o arquivo enviado (tamanho muito grande).");
+            responder_movimento(ACK_TYPE);
+        }
     }
 
     return 0;

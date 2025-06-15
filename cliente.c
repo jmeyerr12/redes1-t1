@@ -218,7 +218,6 @@ int verificar_resposta() {
                             enviou_erro = esperar_ack(&error_pkt);
                         } while (enviou_erro == 0);
                         printf("ERRO: Arquivo grande demais.");
-                        return 0;
                     }
                     /* limpa estado */
                     aguardando_arquivo = 0;
@@ -237,7 +236,7 @@ int verificar_resposta() {
                 else
                     printf("ERRO: Servidor não encontrou o arquivo especificado do tesouro.");
                 responder_ack(ACK_TYPE, pkt->seq);  
-                return 0;
+                return 2;
 
             default:
                 break;

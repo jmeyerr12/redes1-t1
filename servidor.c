@@ -1,10 +1,30 @@
 #include "servidor.h"
+#include <sys/stat.h>
+#include <unistd.h>
+#include <stdbool.h>
 
 Tesouro tesouros[MAX_TESOUROS];
 int pos_x = 0, pos_y = 0;
 int socket_fd;
 char buffer[BUF_SIZE];
 static int quedas = 0;
+
+bool tem_permissao_arquivo(const char *caminho) {
+	struct stat st;
+	if (stat(caminho, &st) != 0)
+		return false;
+
+	uid_t uid = getuid(); // uid real
+	gid_t gid = getgid(); // gid real
+
+	if (uid == st.st_uid)
+		return (st.st_mode & S_IRUSR);
+
+	if (gid == st.st_gid)
+		return (st.st_mode & S_IRGRP);
+
+	return (st.st_mode & S_IROTH);
+}
 
 void carregar_tesouros() {
     srand(time(NULL));
@@ -89,7 +109,7 @@ int esperar_ack(kermit_pckt_t *pkt) {
 }
 
 void enviar_arquivo(const char *caminho, int seq) {
-    if (access(caminho, R_OK) != 0) {
+    if (!tem_permissao_arquivo(caminho)) {
         int enviou_erro = 0;
         //mandar erro pro cliente
         do {

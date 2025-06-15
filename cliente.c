@@ -232,8 +232,10 @@ int verificar_resposta() {
             case ERROR_TYPE:
                 if (pkt->data[0] == (byte_t)ERR_NO_PERMISSION)
                     printf("ERRO: Servidor não teve permissão para acessar um dos arquivos.");
-                else
+                else if (pkt->data[0] == (byte_t)ERR_COULD_NOT_OPEN)
                     printf("ERRO: Servidor falhou ao abrir um dos arquivos na hora do envio.");
+                else
+                    printf("ERRO: Servidor não encontrou o arquivo especificado do tesouro.");
                 responder_ack(ACK_TYPE, pkt->seq);  
                 return 0;
 

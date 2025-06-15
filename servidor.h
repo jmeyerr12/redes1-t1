@@ -7,6 +7,7 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <stdbool.h>
 
 #include "raw_socket.h"
 #include "kermit.h"

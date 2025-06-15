@@ -1,13 +1,15 @@
 #include "servidor.h"
-#include <sys/stat.h>
-#include <unistd.h>
-#include <stdbool.h>
 
 Tesouro tesouros[MAX_TESOUROS];
 int pos_x = 0, pos_y = 0;
 int socket_fd;
 char buffer[BUF_SIZE];
 static int quedas = 0;
+
+bool arquivo_existe(const char *caminho) {
+    struct stat st;
+    return (stat(caminho, &st) == 0);
+}
 
 bool tem_permissao_arquivo(const char *caminho) {
 	struct stat st;
@@ -109,6 +111,19 @@ int esperar_ack(kermit_pckt_t *pkt) {
 }
 
 void enviar_arquivo(const char *caminho, int seq) {
+    if (!arquivo_existe(caminho)) {
+        int enviou_erro = 0;
+        //mandar erro pro cliente
+        do {
+            byte_t erro = ERR_DOESNT_EXIST;
+            kermit_pckt_t error_pkt;
+            gen_kermit_pckt(&error_pkt, seq++, ERROR_TYPE, &erro, 1);
+            enviou_erro = esperar_ack(&error_pkt);
+        } while (enviou_erro == 0);
+        perror("ERRO: Arquivo especificado não existe");
+        return;
+    }
+
     if (!tem_permissao_arquivo(caminho)) {
         int enviou_erro = 0;
         //mandar erro pro cliente

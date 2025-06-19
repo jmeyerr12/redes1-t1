@@ -70,7 +70,7 @@ int recvfrom_rawsocket(int soquete, int timeoutMillis, char* buffer, int tamanho
 
         if (valid_kermit_pckt((kermit_pckt_t *)buffer)) {
             return real_bytes;
-        } else return -1;
+        } else return -2;
     } while (timestamp() - comeco <= timeoutMillis);
     return -1;
 }

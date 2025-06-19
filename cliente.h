@@ -57,7 +57,7 @@ int verificar_resposta();
 /*!
  * @brief Envia uma resposta ACK (confirmação) de volta ao servidor.
  *
- * @param tipo Tipo do ACK a ser enviado (por exemplo, OKACK_TYPE ou ERRACK_TYPE).
+ * @param tipo Tipo do ACK a ser enviado (por exemplo, OKACK_TYPE ou ACK_TYPE).
  * @param seq Número de sequência do pacote ao qual o ACK se refere.
  */
 void responder_ack(byte_t tipo, byte_t seq);

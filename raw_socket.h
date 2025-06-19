@@ -44,7 +44,7 @@ int sendto_rawsocket(int socket_fd, void *buf, size_t buf_size);
     @param  buf         Buffer da mensagem
     @param  buf_size    Tamanho da mensagem
 
-    @return Quantidade de bytes lidos
+    @return Quantidade de bytes lidos, -2 pacote recebido inválido, -1 timeout sem recebimento ou outro problema (não recebimento) 
 */
 int recvfrom_rawsocket(int soquete, int timeoutMillis, char* buffer, int tamanho_buffer);
 

@@ -82,7 +82,6 @@ void receber_arquivo(int tipo, const char *nome_arquivo, int tamanho) {
             prev_percent = percent;
 
             responder_ack(OKACK_TYPE, pkt->seq);
-            //printf("Gravando %d bytes (seq %d)\n", pkt->size, pkt->seq);
             fwrite(pkt->data, 1, pkt->size, fp);
             total_bytes += pkt->size;
             ultima_seq = pkt->seq;
@@ -133,7 +132,12 @@ int verificar_resposta() {
     {
         int bytes = recvfrom_rawsocket(socket_fd, 50, buffer, BUF_SIZE); /* timeout parcial 50 ms */
         
-        if (bytes <= 0) {
+        if (bytes == -2) { // pacote recebido inválido (checksum)
+            responder_ack(NACK_TYPE, pkt->seq);     /* pede retransmissão  */
+            continue;
+        }
+
+        if (bytes <= 0) { // bytes = -1 (não recebimento(timeout) ou outro erro desconhecido)
             /* nada chegou nestes 50 ms */
             if (++quedas > 100) {               /* ≈5 s sem nada */
                 puts("[CLIENTE] link ausente; reiniciando socket…");
@@ -147,15 +151,15 @@ int verificar_resposta() {
         /* pacote chegou: zera contador de quedas */
         quedas = 0;
 
-        if (!valid_kermit_pckt(pkt)) {              /* pacote corrompido   */
-            responder_ack(NACK_TYPE, pkt->seq);     /* pede retransmissão  */
+/*         if (!valid_kermit_pckt(pkt)) {           
+            responder_ack(NACK_TYPE, pkt->seq);    
             continue;
-        }
+        } */
 
         /* --- respostas de movimentação --- */
         if (pkt->type == OKACK_TYPE) return 1;
         if (pkt->type == ACK_TYPE) return 0;
-        if (pkt->type == NACK_TYPE) {printf("aaaaa");return -1;}
+        if (pkt->type == NACK_TYPE) return -1;
 
         /* --- início de envio de tesouro --- */
         switch (pkt->type) {

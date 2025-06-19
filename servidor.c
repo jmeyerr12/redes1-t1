@@ -78,7 +78,7 @@ int esperar_ack(kermit_pckt_t *pkt) {
 
         quedas = 0;
 
-        if (!valid_kermit_pckt(resp)) continue;
+        if (bytes == -2) continue; // pacote corrompido
         if (resp->seq != pkt->seq) continue;
 
         if (resp->type == OKACK_TYPE) return 1;
@@ -217,6 +217,11 @@ int main(int argc, char *argv[]) {
 
     while (1) {
         int bytes = recvfrom_rawsocket(socket_fd, TIMEOUT_MS, buffer, BUF_SIZE);
+        if (bytes == -2) { //não passou checksum
+            printf("Pacote inválido recebido\n");
+            responder_movimento(NACK_TYPE);
+            continue;
+        }
         //print_kermit_pckt((kermit_pckt_t *) buffer);
         //kermit_pckt_t *pckt = (kermit_pckt_t *) buffer;
         //if (pckt->type == (0xE)) printf("%d\n", pckt->type);
@@ -232,13 +237,8 @@ int main(int argc, char *argv[]) {
         } else quedas = 0;
 
         kermit_pckt_t *pkt = (kermit_pckt_t *)buffer;
-        if (!valid_kermit_pckt(pkt)) {
-            printf("Pacote inválido recebido\n");
-            continue;
-        }
 
         if (pkt->type >= MOVER_DIR && pkt->type <= MOVER_ESQ) processar_movimento(pkt->type); //aqui ja manda nack
-        //else if (pkt->type == ERROR_TYPE) responder_movimento(NACK_TYPE);
     }
 
     return 0;

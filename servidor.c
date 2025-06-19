@@ -193,7 +193,7 @@ void enviar_arquivo(const char *caminho, int seq) {
         do {
             gen_kermit_pckt(&pkt, seq, DATA_TYPE, dados, lidos);
             status = esperar_ack(&pkt);
-            if (status == 0) printf("Reenviando bloco de dados (seq = %d)…\n", seq);
+            if (status == 0) printf("Reenviando bloco de dados (seq = %d)…\n", seq%32);
         } while (status == 0);
         seq++;
     }

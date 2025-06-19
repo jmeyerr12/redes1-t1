@@ -129,4 +129,12 @@ void gen_nack(kermit_pckt_t *nack, byte_t seq);
  */
 void responder_movimento(byte_t tipo);
 
+/*!
+ * @brief Verifica se o marcador de inicio é valido
+ *
+ * @param kpckt Ponteiro para o pacote a ser validado
+ * @return 1 se válido, 0 se inválido
+ */
+int valid_init_marker(kermit_pckt_t *kpckt);
+
 #endif

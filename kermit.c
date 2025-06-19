@@ -37,6 +37,11 @@ int valid_kermit_pckt(kermit_pckt_t *kpckt) {
     return !error_detection(kpckt);
 }
 
+int valid_init_marker(kermit_pckt_t *kpckt) {
+    if (kpckt->init_marker != INIT_MARKER) return 0;
+    return 1;
+}
+
 int error_detection(kermit_pckt_t *kpckt) {
     byte_t expected = kpckt->size ^ kpckt->seq ^ kpckt->type;
     for (int i = 0; i < kpckt->size; i++)

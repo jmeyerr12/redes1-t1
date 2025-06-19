@@ -283,6 +283,7 @@ int main(int argc, char *argv[]) {
         kermit_pckt_t *pkt = (kermit_pckt_t *)buffer;
         if (!valid_kermit_pckt(pkt)) {
             printf("Pacote inválido recebido\n");
+            print_kermit_pckt(pkt); //linha de debug
             responder_movimento(NACK_TYPE);
             continue;
         }

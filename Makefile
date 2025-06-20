@@ -16,5 +16,10 @@ cliente: cliente.o $(OBJ_COMUM)
 
 clean:
 	rm -f *.o servidor cliente *.txt *.jpg *.mp4
+	
+entrega:
+	mkdir -p objetos
+	tar -czf 20232347_20232342.tar.gz *.c *.h *.md *.pdf Makefile objetos
+
 
 .PHONY: all clean servidor cliente

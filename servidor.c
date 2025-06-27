@@ -5,6 +5,7 @@ int pos_x = 0, pos_y = 0;
 int socket_fd;
 char buffer[BUF_SIZE];
 static int quedas = 0;
+char Interface[64];
 
 bool arquivo_existe(const char *caminho) {
     struct stat st;
@@ -92,7 +93,7 @@ int esperar_ack(kermit_pckt_t *pkt) {
             if (++quedas > 100) {
                 puts("[CLIENTE] link ausente; reiniciando socket…");
                 close(socket_fd);
-                socket_fd = cria_raw_socket("enx00e04c534458");
+                socket_fd = cria_raw_socket(Interface);
                 quedas = 0;
             }
             continue;
@@ -260,7 +261,10 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    socket_fd = cria_raw_socket(argv[1]);
+    strncpy(Interface, argv[1], sizeof(Interface)-1);
+    Interface[sizeof(Interface)-1] = '\0';
+
+    socket_fd = cria_raw_socket(Interface);
     carregar_tesouros();
     print_tesouros();
 
